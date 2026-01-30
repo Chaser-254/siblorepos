@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> </title>
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="referrer" content="no-referrer">
+    <meta name="google" content="notranslate">
+    <style>
+        @page {
+            size: 80mm 200mm;
+            margin: 5mm;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.2;
+            margin: 0;
+            padding: 10px;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .receipt-header h1 {
+            font-size: 18px;
+            margin: 0;
+            font-weight: bold;
+        }
+        
+        .receipt-header p {
+            margin: 5px 0;
+            font-size: 10px;
+        }
+        
+        .divider {
+            border-top: 1px dashed #000;
+            margin: 15px 0;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        
+        .items-table {
+            width: 100%;
+            margin: 15px 0;
+        }
+        
+        .items-table th {
+            text-align: left;
+            border-bottom: 1px solid #000;
+            padding: 5px 0;
+            font-size: 10px;
+        }
+        
+        .items-table td {
+            padding: 3px 0;
+            font-size: 10px;
+        }
+        
+        .items-table .item-name {
+            width: 50%;
+        }
+        
+        .items-table .item-qty {
+            width: 15%;
+            text-align: center;
+        }
+        
+        .items-table .item-price {
+            width: 15%;
+            text-align: right;
+        }
+        
+        .items-table .item-total {
+            width: 20%;
+            text-align: right;
+        }
+        
+        .totals {
+            margin-top: 15px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        
+        .grand-total {
+            border-top: 1px solid #000;
+            padding-top: 5px;
+            font-size: 14px;
+        }
+        
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 10px;
+        }
+        
+        .no-print {
+            display: none;
+        }
+        
+        @media print {
+            @page {
+                size: 80mm 200mm;
+                margin: 2mm;
+            }
+            
+            body {
+                margin: 0;
+                padding: 2px;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            /* Hide browser headers and footers - aggressive approach */
+            @page :header {
+                display: none !important;
+                content: none !important;
+            }
+            
+            @page :footer {
+                display: none !important;
+                content: none !important;
+            }
+            
+            @page top {
+                display: none !important;
+            }
+            
+            @page bottom {
+                display: none !important;
+            }
+            
+            @page left {
+                display: none !important;
+            }
+            
+            @page right {
+                display: none !important;
+            }
+            
+            /* Remove default browser print styles */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
+            /* Additional styles to prevent browser from adding URL/date */
+            html {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            
+            body {
+                margin: 0 !important;
+                padding: 2px !important;
+            }
+            
+            /* Try to hide browser print headers/footers */
+            @page top-center {
+                display: none !important;
+                content: none !important;
+            }
+            
+            @page bottom-center {
+                display: none !important;
+                content: none !important;
+            }
+            
+            @page top-left {
+                display: none !important;
+                content: none !important;
+            }
+            
+            @page top-right {
+                display: none !important;
+                content: none !important;
+            }
+            
+            @page bottom-left {
+                display: none !important;
+                content: none !important;
+            }
+            
+            @page bottom-right {
+                display: none !important;
+                content: none !important;
+            }
+            
+            /* Chrome/Edge specific */
+            @page {
+                margin: 2mm !important;
+            }
+            
+            /* Firefox specific */
+            * {
+                overflow: visible !important;
+            }
+            
+            /* Try to hide any remaining headers */
+            header {
+                display: none !important;
+            }
+            
+            footer {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-header">
+        <h1>SibLore POS</h1>
+        <p>123 Business Street</p>
+        <p>City, State 12345</p>
+        <p>Tel: +1 234 567 8900</p>
+        <p>Email: info@siblore.com</p>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="receipt-info">
+        <div class="info-row">
+            <span>Invoice #:</span>
+            <span>{{ sale.invoice_number }}</span>
+        </div>
+        <div class="info-row">
+            <span>Date:</span>
+            <span>{{ sale.created_at|date:"M d, Y H:i" }}</span>
+        </div>
+        <div class="info-row">
+            <span>Cashier:</span>
+            <span>{{ sale.created_by|default:"System" }}</span>
+        </div>
+        {% if sale.customer %}
+        <div class="info-row">
+            <span>Customer:</span>
+            <span>{{ sale.customer.name }}</span>
+        </div>
+        {% endif %}
+        <div class="info-row">
+            <span>Payment:</span>
+            <span>{{ sale.get_payment_method_display }}</span>
+        </div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th class="item-name">Item</th>
+                <th class="item-qty">Qty</th>
+                <th class="item-price">Price</th>
+                <th class="item-total">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in sale.sale_items.all %}
+            <tr>
+                <td class="item-name">{{ item.product.name|truncatechars:20 }}</td>
+                <td class="item-qty">{{ item.quantity }}</td>
+                <td class="item-price">KES {{ item.unit_price|floatformat:2 }}</td>
+                <td class="item-total">KES {{ item.total_price|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="divider"></div>
+    
+    <div class="totals">
+        <div class="info-row">
+            <span>Subtotal:</span>
+            <span>KES {{ sale.subtotal|floatformat:2 }}</span>
+        </div>
+        <div class="info-row">
+            <span>Tax:</span>
+            <span>KES {{ sale.tax_amount|floatformat:2 }}</span>
+        </div>
+        {% if sale.discount_amount > 0 %}
+        <div class="info-row">
+            <span>Discount:</span>
+            <span>-KES {{ sale.discount_amount|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+        <div class="total-row grand-total">
+            <span>TOTAL:</span>
+            <span>KES {{ sale.total_amount|floatformat:2 }}</span>
+        </div>
+        <div class="info-row">
+            <span>Amount Paid:</span>
+            <span>KES {{ sale.amount_paid|floatformat:2 }}</span>
+        </div>
+        {% if sale.change_amount > 0 %}
+        <div class="info-row">
+            <span>Change:</span>
+            <span>KES {{ sale.change_amount|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+        {% if sale.balance_due > 0 %}
+        <div class="info-row">
+            <span>Balance Due:</span>
+            <span>KES {{ sale.balance_due|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="footer">
+        <p>Thank you for your business!</p>
+        <p>Please come again</p>
+        {% if sale.notes %}
+        <p style="margin-top: 10px; font-style: italic;">Notes: {{ sale.notes }}</p>
+        {% endif %}
+    </div>
+    
+    <script>
+        // Auto-print when page loads
+        window.onload = function() {
+            // Try to hide browser headers/footers with various methods
+            document.title = ' '; // Clear title to reduce header content
+            
+            // Add meta tags to try to prevent headers
+            const meta1 = document.createElement('meta');
+            meta1.name = 'robots';
+            meta1.content = 'noindex,nofollow';
+            document.head.appendChild(meta1);
+            
+            const meta2 = document.createElement('meta');
+            meta2.name = 'referrer';
+            meta2.content = 'no-referrer';
+            document.head.appendChild(meta2);
+            
+            setTimeout(function() {
+                window.print();
+                window.close();
+            }, 500);
+        };
+        
+        // Additional print handling
+        window.addEventListener('beforeprint', function() {
+            // Clear title before printing
+            document.title = '';
+        });
+        
+        window.addEventListener('afterprint', function() {
+            // Close window after printing
+            window.close();
+        });
+    </script>
+</body>
+</html>

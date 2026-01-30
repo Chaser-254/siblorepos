@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Cashiers - POS System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Cashier Management</h1>
+    <a href="{% url 'users:cashier_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add Cashier
+    </a>
+</div>
+
+{% if user.userprofile.shop_name %}
+<div class="alert alert-info mb-4">
+    <i class="fas fa-store mr-2"></i>
+    <strong>Shop:</strong> {{ user.userprofile.shop_name }}
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Shop</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cashier in cashiers %}
+                    <tr>
+                        <td>{{ cashier.username }}</td>
+                        <td>{{ cashier.get_full_name|default:cashier.username }}</td>
+                        <td>{{ cashier.email }}</td>
+                        <td>{{ cashier.userprofile.phone|default:"-" }}</td>
+                        <td>{{ cashier.userprofile.shop_admin.shop_name|default:"-" }}</td>
+                        <td>
+                            {% if cashier.userprofile.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'users:cashier_update' cashier.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <a href="{% url 'users:cashier_toggle_active' cashier.pk %}" class="btn btn-sm btn-outline-warning">
+                                {% if cashier.profile.is_active %}
+                                    <i class="fas fa-ban"></i> Deactivate
+                                {% else %}
+                                    <i class="fas fa-check"></i> Activate
+                                {% endif %}
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">No cashiers found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

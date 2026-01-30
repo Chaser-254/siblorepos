@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Sale Detail - SibLore POS{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Sale Details</h1>
+            <p class="text-gray-600 mt-2">Invoice: {{ sale.invoice_number }}</p>
+        </div>
+        <a href="{% url 'sales:sales_list' %}" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Sales
+        </a>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Sale Information -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Sale Information</h2>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <p class="text-sm text-gray-600">Invoice Number</p>
+                    <p class="font-medium">{{ sale.invoice_number }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Date & Time</p>
+                    <p class="font-medium">{{ sale.created_at|date:"M d, Y H:i" }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Customer</p>
+                    <p class="font-medium">{{ sale.customer.name|default:"Walk-in Customer" }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Payment Method</p>
+                    <p class="font-medium">{{ sale.get_payment_method_display }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Status</p>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                        {% if sale.status == 'COMPLETED' %}bg-green-100 text-green-800
+                        {% elif sale.status == 'PENDING' %}bg-yellow-100 text-yellow-800
+                        {% elif sale.status == 'CANCELLED' %}bg-red-100 text-red-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ sale.get_status_display }}
+                    </span>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Created By</p>
+                    <p class="font-medium">{{ sale.created_by|default:"System" }}</p>
+                </div>
+            </div>
+
+            <!-- Sale Items -->
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Items</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for item in sale.sale_items.all %}
+                            <tr>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ item.product.name }}
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ item.quantity }}
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    KES {{ item.unit_price|floatformat:2 }}
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    KES {{ item.total_price|floatformat:2 }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="px-4 py-4 text-center text-gray-500">No items found</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if sale.notes %}
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Notes</h3>
+                    <p class="text-gray-600">{{ sale.notes }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Payment Summary</h2>
+            
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Subtotal:</span>
+                    <span class="font-medium">KES {{ sale.subtotal|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Tax:</span>
+                    <span class="font-medium">KES {{ sale.tax_amount|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Discount:</span>
+                    <span class="font-medium">KES {{ sale.discount_amount|floatformat:2 }}</span>
+                </div>
+                <div class="border-t pt-2 mt-2">
+                    <div class="flex justify-between">
+                        <span class="text-lg font-semibold">Total:</span>
+                        <span class="text-lg font-bold text-blue-600">KES {{ sale.total_amount|floatformat:2 }}</span>
+                    </div>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Amount Paid:</span>
+                    <span class="font-medium text-green-600">KES {{ sale.amount_paid|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Balance Due:</span>
+                    <span class="font-medium {% if sale.balance_due > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                        KES {{ sale.balance_due|floatformat:2 }}
+                    </span>
+                </div>
+                {% if sale.change_amount > 0 %}
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Change:</span>
+                        <span class="font-medium text-green-600">KES {{ sale.change_amount|floatformat:2 }}</span>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="mt-6 space-y-2">
+                <a href="{% url 'sales:sale_receipt' sale.pk %}" target="_blank" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors inline-block text-center">
+                    <i class="fas fa-print mr-2"></i>Print Receipt
+                </a>
+                {% if sale.balance_due > 0 %}
+                    <a href="{% url 'sales:pay_debt' sale.debt_records.first.pk %}" class="block w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-center">
+                        <i class="fas fa-money-check-alt mr-2"></i>Pay Balance
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

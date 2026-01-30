@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Professional POS System{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .sidebar-item:hover { background-color: #f3f4f6; }
+        .sidebar-item.active { background-color: #3b82f6; color: white; }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-cash-register text-blue-600 text-2xl mr-3"></i>
+                        <h1 class="font-bold text-xl text-gray-800">SibLore POS</h1>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="{% url 'sales:dashboard' %}" class="border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Dashboard
+                        </a>
+                        <a href="{% url 'sales:pos_terminal' %}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            POS Terminal
+                        </a>
+                        <a href="{% url 'products:product_list' %}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Products
+                        </a>
+                        <a href="{% url 'sales:sales_list' %}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Sales
+                        </a>
+                        <a href="{% url 'sales:reports' %}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Reports
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <span class="text-sm text-gray-600">
+                            <i class="fas fa-user-circle mr-1"></i>
+                            {{ user.username }} ({{ user.profile.get_role_display }})
+                        </span>
+                        <span class="text-sm text-gray-600">
+                            <i class="fas fa-clock mr-1"></i>
+                            {% now "H:i" %}
+                        </span>
+                        {% if user.is_superuser %}
+                        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                            <i class="fas fa-shield-alt mr-1"></i>Superuser
+                        </span>
+                        {% endif %}
+                        <a href="{% url 'users:logout' %}" class="text-sm text-red-600 hover:text-red-800">
+                            <i class="fas fa-sign-out-alt mr-1"></i>
+                            Logout
+                        </a>
+                    {% else %}
+                        <a href="{% url 'users:login' %}" class="text-sm text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-sign-in-alt mr-1"></i>
+                            Login
+                        </a>
+                        <a href="{% url 'users:register_request' %}" class="text-sm text-green-600 hover:text-green-800">
+                            <i class="fas fa-user-plus mr-1"></i>
+                            Request Account
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-md min-h-screen">
+            <div class="p-4">
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main Menu</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'sales:dashboard' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-chart-line mr-3 text-gray-400"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'sales:pos_terminal' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-shopping-cart mr-3 text-gray-400"></i>
+                            POS Terminal
+                        </a>
+                    </li>
+                    {% if user.is_authenticated and user.profile.can_manage_products %}
+                    <li>
+                        <a href="{% url 'products:product_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-box mr-3 text-gray-400"></i>
+                            Products
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'products:stock_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-warehouse mr-3 text-gray-400"></i>
+                            Stock Management
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <a href="{% url 'sales:sales_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-receipt mr-3 text-gray-400"></i>
+                            Sales History
+                        </a>
+                    </li>
+                    {% if user.is_authenticated and user.profile.can_view_revenue_debts %}
+                    <li>
+                        <a href="{% url 'sales:customers_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-users mr-3 text-gray-400"></i>
+                            Customers
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'sales:debts_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-hand-holding-usd mr-3 text-gray-400"></i>
+                            Debt Management
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if user.is_authenticated and user.profile.can_view_all_reports %}
+                    <li>
+                        <a href="{% url 'sales:reports' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-chart-bar mr-3 text-gray-400"></i>
+                            Reports
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                {% if user.is_authenticated %}
+                {% if user.is_superuser %}
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-4">Site Administration</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'users:site_owner_dashboard' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md bg-purple-50 text-purple-700">
+                            <i class="fas fa-crown mr-3 text-purple-500"></i>
+                            Site Admin Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'users:registration_requests' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-user-check mr-3 text-gray-400"></i>
+                            Registration Requests
+                            {% if pending_requests_count > 0 %}
+                                <span class="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">{{ pending_requests_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'users:user_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-users-cog mr-3 text-gray-400"></i>
+                            User Management
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-cog mr-3 text-gray-400"></i>
+                            Django Admin
+                        </a>
+                    </li>
+                </ul>
+                {% elif user.userprofile.is_shop_admin %}
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-4">Shop Administration</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'users:shop_admin_dashboard' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md bg-blue-50 text-blue-700">
+                            <i class="fas fa-store mr-3 text-blue-500"></i>
+                            Shop Admin Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'users:cashier_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-user-tie mr-3 text-gray-400"></i>
+                            Cashier Management
+                        </a>
+                    </li>
+                </ul>
+                
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-4">Sales Operations</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'sales:dashboard' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-cash-register mr-3 text-gray-400"></i>
+                            POS Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'sales:sales_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-receipt mr-3 text-gray-400"></i>
+                            Sales History
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'sales:customers_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-users mr-3 text-gray-400"></i>
+                            Customers
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'sales:debts_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-hand-holding-usd mr-3 text-gray-400"></i>
+                            Debt Management
+                        </a>
+                    </li>
+                </ul>
+                
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-4">Product Management</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'products:product_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-box mr-3 text-gray-400"></i>
+                            Products
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'products:category_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-tags mr-3 text-gray-400"></i>
+                            Categories
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'products:stock_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-warehouse mr-3 text-gray-400"></i>
+                            Stock Management
+                        </a>
+                    </li>
+                </ul>
+                
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-4">Reports</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'sales:reports' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-chart-bar mr-3 text-gray-400"></i>
+                            Sales Reports
+                        </a>
+                    </li>
+                </ul>
+                {% endif %}
+                {% endif %}
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="px-4 py-3 rounded-md mb-2 {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p class="text-sm text-gray-300">
+                    &copy; {% now "Y" %} SibLore POS System. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Set active sidebar item
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            
+            sidebarItems.forEach(item => {
+                if (item.getAttribute('href') === currentPath) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

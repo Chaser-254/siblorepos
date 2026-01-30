@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}POS Admin Dashboard - SibLore POS{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">POS Admin Dashboard</h1>
+            <p class="text-gray-600 mt-2">Business operations management and oversight</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'users:registration_requests' %}" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                <i class="fas fa-user-check mr-2"></i>
+                {% if pending_requests > 0 %}
+                    <span class="bg-red-500 text-white text-xs rounded-full px-2 py-1">{{ pending_requests }}</span>
+                {% endif %}
+                Requests
+            </a>
+            <a href="{% url 'users:user_list' %}" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                <i class="fas fa-users-cog mr-2"></i>Manage Users
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Today's Sales -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 bg-blue-100 rounded-lg">
+                <i class="fas fa-chart-line text-blue-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Today's Sales</p>
+                <p class="text-2xl font-bold text-gray-900">KES {{ today_sales_total|floatformat:2 }}</p>
+                <p class="text-xs text-gray-500">{{ today_sales_count }} transactions</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Customers -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 bg-green-100 rounded-lg">
+                <i class="fas fa-users text-green-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Total Customers</p>
+                <p class="text-2xl font-bold text-gray-900">{{ total_customers }}</p>
+                <p class="text-xs text-gray-500">Active accounts</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Outstanding Debts -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 bg-red-100 rounded-lg">
+                <i class="fas fa-hand-holding-usd text-red-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Outstanding Debts</p>
+                <p class="text-2xl font-bold text-gray-900">KES {{ outstanding_debts|floatformat:2 }}</p>
+                <p class="text-xs text-gray-500">Total: KES {{ total_debts|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Products -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 bg-purple-100 rounded-lg">
+                <i class="fas fa-box text-purple-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Products</p>
+                <p class="text-2xl font-bold text-gray-900">{{ total_products }}</p>
+                <p class="text-xs text-gray-500">{{ low_stock_products }} low stock</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Management Sections -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- User Management -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">User Management</h2>
+            <a href="{% url 'users:user_list' %}" class="text-blue-600 hover:text-blue-800 text-sm">
+                View All <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        <div class="space-y-3">
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <div class="flex items-center">
+                    <i class="fas fa-users text-gray-600 mr-3"></i>
+                    <span class="text-sm font-medium text-gray-700">Total Active Users</span>
+                </div>
+                <span class="text-lg font-bold text-gray-900">{{ total_users }}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-yellow-50 rounded">
+                <div class="flex items-center">
+                    <i class="fas fa-user-clock text-yellow-600 mr-3"></i>
+                    <span class="text-sm font-medium text-gray-700">Pending Requests</span>
+                </div>
+                <span class="text-lg font-bold text-yellow-600">{{ pending_requests }}</span>
+            </div>
+        </div>
+        <div class="mt-4 space-y-2">
+            <a href="{% url 'users:user_create' %}" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-center block">
+                <i class="fas fa-user-plus mr-2"></i>Create New User
+            </a>
+            <a href="{% url 'users:registration_requests' %}" class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors text-center block">
+                <i class="fas fa-user-check mr-2"></i>Review Requests
+            </a>
+        </div>
+    </div>
+
+    <!-- System Health -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">System Health</h2>
+            <span class="text-green-600 text-sm font-medium">
+                <i class="fas fa-circle text-green-500 mr-1"></i>Healthy
+            </span>
+        </div>
+        <div class="space-y-3">
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <div class="flex items-center">
+                    <i class="fas fa-box text-gray-600 mr-3"></i>
+                    <span class="text-sm font-medium text-gray-700">Low Stock Alerts</span>
+                </div>
+                <span class="text-lg font-bold {% if low_stock_products > 0 %}text-yellow-600{% else %}text-green-600{% endif %}">
+                    {{ low_stock_products }}
+                </span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <div class="flex items-center">
+                    <i class="fas fa-dollar-sign text-gray-600 mr-3"></i>
+                    <span class="text-sm font-medium text-gray-700">Today's Revenue</span>
+                </div>
+                <span class="text-lg font-bold text-green-600">KES {{ today_sales_total|floatformat:2 }}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <div class="flex items-center">
+                    <i class="fas fa-exchange-alt text-gray-600 mr-3"></i>
+                    <span class="text-sm font-medium text-gray-700">Today's Transactions</span>
+                </div>
+                <span class="text-lg font-bold text-blue-600">{{ today_sales_count }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="{% url 'sales:dashboard' %}" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+            <i class="fas fa-tachometer-alt text-blue-600 text-xl mr-3"></i>
+            <div>
+                <p class="font-medium text-gray-900">Sales Dashboard</p>
+                <p class="text-sm text-gray-600">View sales overview</p>
+            </div>
+        </a>
+        
+        <a href="{% url 'products:stock_list' %}" class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+            <i class="fas fa-warehouse text-green-600 text-xl mr-3"></i>
+            <div>
+                <p class="font-medium text-gray-900">Stock Management</p>
+                <p class="text-sm text-gray-600">Manage inventory</p>
+            </div>
+        </a>
+        
+        <a href="{% url 'sales:debts_list' %}" class="flex items-center p-4 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+            <i class="fas fa-hand-holding-usd text-red-600 text-xl mr-3"></i>
+            <div>
+                <p class="font-medium text-gray-900">Debt Management</p>
+                <p class="text-sm text-gray-600">Track customer debts</p>
+            </div>
+        </a>
+        
+        <a href="{% url 'sales:reports' %}" class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+            <i class="fas fa-chart-bar text-purple-600 text-xl mr-3"></i>
+            <div>
+                <p class="font-medium text-gray-900">Reports</p>
+                <p class="text-sm text-gray-600">View analytics</p>
+            </div>
+        </a>
+        
+        <a href="{% url 'sales:pos_terminal' %}" class="flex items-center p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors">
+            <i class="fas fa-cash-register text-yellow-600 text-xl mr-3"></i>
+            <div>
+                <p class="font-medium text-gray-900">POS Terminal</p>
+                <p class="text-sm text-gray-600">Process sales</p>
+            </div>
+        </a>
+        
+        <a href="/admin/" class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+            <i class="fas fa-cog text-gray-600 text-xl mr-3"></i>
+            <div>
+                <p class="font-medium text-gray-900">System Admin</p>
+                <p class="text-sm text-gray-600">Django admin panel</p>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Recent Activity Summary -->
+<div class="mt-8 bg-white rounded-lg shadow p-6">
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">System Overview</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+        <div>
+            <div class="text-3xl font-bold text-blue-600">{{ total_users }}</div>
+            <div class="text-sm text-gray-600 mt-1">Active Users</div>
+        </div>
+        <div>
+            <div class="text-3xl font-bold text-green-600">{{ total_products }}</div>
+            <div class="text-sm text-gray-600 mt-1">Products</div>
+        </div>
+        <div>
+            <div class="text-3xl font-bold text-purple-600">{{ total_customers }}</div>
+            <div class="text-sm text-gray-600 mt-1">Customers</div>
+        </div>
+        <div>
+            <div class="text-3xl font-bold text-red-600">KES {{ outstanding_debts|floatformat:0 }}</div>
+            <div class="text-sm text-gray-600 mt-1">Outstanding</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

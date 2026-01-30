@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - SibLore POS{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">{{ title }}</h1>
+    <p class="text-gray-600 mt-2">
+        {% if product %}Edit product information{% else %}Add a new product to your inventory{% endif %}
+    </p>
+</div>
+
+<div class="bg-white rounded-lg shadow">
+    <form method="post" enctype="multipart/form-data" class="p-6">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Product Name *</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">SKU *</label>
+                {{ form.sku }}
+                {% if form.sku.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.sku.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Barcode</label>
+                {{ form.barcode }}
+                {% if form.barcode.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.barcode.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.category.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Cost Price *</label>
+                {{ form.cost_price }}
+                {% if form.cost_price.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.cost_price.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Selling Price *</label>
+                {{ form.selling_price }}
+                {% if form.selling_price.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.selling_price.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
+                {{ form.image }}
+                {% if form.image.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.image.errors.0 }}</p>
+                {% endif %}
+                {% if product.image %}
+                    <div class="mt-2">
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-20 h-20 object-cover rounded">
+                        <p class="text-sm text-gray-500 mt-1">Current image</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="md:col-span-2">
+                <label class="flex items-center">
+                    {{ form.is_active }}
+                    <span class="ml-2 text-sm text-gray-700">Product is active</span>
+                </label>
+                {% if form.is_active.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.is_active.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="flex justify-end space-x-4 mt-6">
+            <a href="{% url 'products:product_list' %}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
+                Cancel
+            </a>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                {% if product %}Update Product{% else %}Create Product{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

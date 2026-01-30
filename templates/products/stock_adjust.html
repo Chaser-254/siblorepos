@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Adjust Stock - {{ stock.product.name }} - SibLore POS{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex items-center mb-4">
+        <a href="{% url 'products:stock_list' %}" class="text-blue-600 hover:text-blue-800 mr-3">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Stock
+        </a>
+    </div>
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Adjust Stock</h1>
+            <p class="text-gray-600 mt-2">Adjust stock levels for {{ stock.product.name }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Product Info Card -->
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex items-center">
+        {% if stock.product.image %}
+            <img src="{{ stock.product.image.url }}" alt="{{ stock.product.name }}" class="w-16 h-16 rounded object-cover mr-4">
+        {% else %}
+            <div class="w-16 h-16 bg-gray-200 rounded flex items-center justify-center mr-4">
+                <i class="fas fa-box text-gray-400 text-xl"></i>
+            </div>
+        {% endif %}
+        <div class="flex-1">
+            <h2 class="text-xl font-semibold text-gray-900">{{ stock.product.name }}</h2>
+            <p class="text-gray-600">SKU: {{ stock.product.sku }}</p>
+            <div class="mt-2 flex items-center space-x-4">
+                <span class="text-sm text-gray-600">Current Stock: <span class="font-medium text-gray-900">{{ stock.quantity }}</span></span>
+                <span class="text-sm text-gray-600">Reorder Level: <span class="font-medium text-gray-900">{{ stock.reorder_level }}</span></span>
+                <span class="text-sm text-gray-600">Max Stock: <span class="font-medium text-gray-900">{{ stock.max_stock }}</span></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Adjustment Form -->
+<div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Stock Adjustment Details</h3>
+    </div>
+    <div class="p-6">
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                    {% for error in form.non_field_errors %}
+                        <p class="text-red-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.adjustment_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Adjustment Type <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.adjustment_type }}
+                    {% if form.adjustment_type.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.adjustment_type.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.quantity.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Quantity <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.quantity }}
+                    {% if form.quantity.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.quantity.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">
+                        {% if form.adjustment_type.value == 'IN' %}
+                            Enter quantity to add to current stock
+                        {% elif form.adjustment_type.value == 'OUT' %}
+                            Enter quantity to remove from current stock
+                        {% elif form.adjustment_type.value == 'ADJUST' %}
+                            Enter new total quantity
+                        {% else %}
+                            Select adjustment type to see instructions
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Notes
+                </label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.notes.errors.0 }}</p>
+                {% endif %}
+                <p class="mt-1 text-xs text-gray-500">Optional: Add notes about this adjustment</p>
+            </div>
+
+            <div class="mt-8 flex justify-end space-x-3">
+                <a href="{% url 'products:stock_list' %}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-save mr-2"></i>Adjust Stock
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Stock Adjustment Info -->
+<div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="flex">
+        <div class="flex-shrink-0">
+            <i class="fas fa-info-circle text-blue-400 text-lg"></i>
+        </div>
+        <div class="ml-3">
+            <h3 class="text-sm font-medium text-blue-800">Stock Adjustment Types</h3>
+            <div class="mt-2 text-sm text-blue-700">
+                <ul class="list-disc list-inside space-y-1">
+                    <li><strong>Stock In:</strong> Adds quantity to current stock level</li>
+                    <li><strong>Stock Out:</strong> Removes quantity from current stock level</li>
+                    <li><strong>Set Quantity:</strong> Sets stock to a specific quantity</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

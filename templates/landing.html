@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SibLore POS - Professional Point of Sale System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .feature-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-cash-register text-blue-600 text-xl sm:text-2xl mr-2 sm:mr-3"></i>
+                        <h1 class="font-bold text-lg sm:text-xl text-gray-800">SibLore POS</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <a href="{% url 'users:login' %}" class="text-blue-600 hover:text-blue-800 font-medium text-sm sm:text-base">
+                        <i class="fas fa-sign-in-alt mr-1"></i>
+                        <span class="hidden sm:inline">Login</span>
+                    </a>
+                    <a href="{% url 'users:register_request' %}" class="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm sm:text-base">
+                        <i class="fas fa-user-plus mr-1"></i>
+                        <span class="hidden sm:inline">Request Account</span>
+                        <span class="sm:hidden">Request</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-gradient text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
+            <div class="text-center">
+                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6">
+                    Professional Point of Sale System
+                </h1>
+                <p class="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 text-blue-100 px-4 sm:px-0">
+                    Streamline your business with our comprehensive POS solution
+                </p>
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
+                    <a href="{% url 'users:login' %}" class="sm:w-auto bg-white text-blue-600 px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-center max-w-xs mx-auto sm:mx-0">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Login to System
+                    </a>
+                    <a href="{% url 'users:register_request' %}" class="sm:w-auto bg-blue-800 text-white px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-blue-900 transition-colors text-center max-w-xs mx-auto sm:mx-0">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        Request Access
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="py-12 sm:py-16 lg:py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12 sm:mb-16">
+                <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+                    Powerful Features for Your Business
+                </h2>
+                <p class="text-lg sm:text-xl text-gray-600 px-4 sm:px-0">
+                    Everything you need to manage sales, inventory, and customers
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                <!-- Sales Management -->
+                <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fas fa-shopping-cart text-blue-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Sales Management</h3>
+                    <p class="text-gray-600 mb-4 text-sm sm:text-base">
+                        Process sales quickly with our intuitive POS terminal. Support for multiple payment methods including cash, card, mobile money, and credit.
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Fast checkout process</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Multiple payment options</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Digital receipts</li>
+                    </ul>
+                </div>
+
+                <!-- Inventory Management -->
+                <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fas fa-warehouse text-green-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Inventory Management</h3>
+                    <p class="text-gray-600 mb-4 text-sm sm:text-base">
+                        Keep track of your stock levels in real-time. Get alerts when items are running low and manage product categories efficiently.
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Real-time stock tracking</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Low stock alerts</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Stock movement history</li>
+                    </ul>
+                </div>
+
+                <!-- Customer Management -->
+                <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fas fa-users text-purple-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Customer Management</h3>
+                    <p class="text-gray-600 mb-4 text-sm sm:text-base">
+                        Build lasting relationships with your customers. Manage credit accounts and track customer purchase history.
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Customer profiles</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Credit management</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Purchase history</li>
+                    </ul>
+                </div>
+
+                <!-- Reporting -->
+                <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fas fa-chart-bar text-yellow-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Advanced Reporting</h3>
+                    <p class="text-gray-600 mb-4 text-sm sm:text-base">
+                        Get insights into your business performance with comprehensive reports and analytics. Track revenue, profits, and trends.
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Sales reports</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Revenue analytics</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Export capabilities</li>
+                    </ul>
+                </div>
+
+                <!-- Debt Management -->
+                <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fas fa-hand-holding-usd text-red-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Debt Management</h3>
+                    <p class="text-gray-600 mb-4 text-sm sm:text-base">
+                        Track and manage customer debts efficiently. Monitor overdue payments and send payment reminders.
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Debt tracking</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Payment processing</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Overdue alerts</li>
+                    </ul>
+                </div>
+
+                <!-- User Management -->
+                <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
+                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
+                        <i class="fas fa-users-cog text-indigo-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">User Management</h3>
+                    <p class="text-gray-600 mb-4 text-sm sm:text-base">
+                        Control access to your system with role-based permissions. Manage staff accounts and monitor user activity.
+                    </p>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Role-based access</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>User permissions</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Activity monitoring</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="bg-gray-800 text-white py-12 sm:py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-2xl sm:text-3xl font-bold mb-4">Ready to Transform Your Business?</h2>
+            <p class="text-lg sm:text-xl mb-6 sm:mb-8 text-gray-300 px-4 sm:px-0">
+                Join thousands of businesses using SibLore POS to streamline their operations
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
+                <a href="{% url 'users:login' %}" class="w-full sm:w-auto bg-white text-gray-800 px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-center">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Login Now
+                </a>
+                <a href="{% url 'users:register_request' %}" class="w-full sm:w-auto bg-blue-600 text-white px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    Request Access
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p class="text-sm text-gray-400">
+                    &copy; {% now "Y" %} SibLore POS System. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
