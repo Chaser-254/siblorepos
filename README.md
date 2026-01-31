@@ -2,9 +2,9 @@
 
 A comprehensive Django-based Point of Sale (POS) system with integrated e-commerce website functionality for managing sales, products, payments, suppliers, customers, and multi-level user management.
 
-## 🌟 Key Features
+## Key Features
 
-### 🏪 Point of Sale (POS) System
+### Point of Sale (POS) System
 - **Multi-role User Management**: Site Admin, Shop Admin, and Cashier roles with granular permissions
 - **Product Management**: Complete inventory control with categories, stock tracking, and barcode support
 - **Sales Processing**: Real-time POS terminal with multiple payment methods (Cash, Card, Mobile Money, Bank Transfer, Credit)
@@ -13,7 +13,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - **Financial Reporting**: Comprehensive sales reports, revenue tracking, and profit analysis
 - **Debt Management**: Customer credit system with payment tracking and overdue alerts
 
-### 🌐 E-commerce Website Integration
+### E-commerce Website Integration
 - **Public Shop Frontend**: Each shop gets its own public website with customizable themes
 - **Online Product Catalog**: Display products with images, descriptions, and pricing
 - **Shopping Cart System**: Full e-commerce cart functionality with AJAX operations
@@ -21,7 +21,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - **Checkout System**: Secure checkout with customer information collection
 - **Shop Customization**: Business details, logos, and theme selection
 
-### 👥 User Management & Authentication
+### User Management & Authentication
 - **Role-Based Access Control**:
   - **Site Admin**: Full system access, user management, registration approval
   - **Shop Admin**: Shop management, product/supplier control, cashier management
@@ -30,7 +30,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - **Custom Authentication**: Enhanced authentication backend with profile-based access control
 - **Business Profiles**: Extended user profiles with business information
 
-### 📦 Inventory & Product Management
+### Inventory & Product Management
 - **Product Categories**: Hierarchical category system
 - **Stock Tracking**: Real-time inventory with automatic stock updates on sales
 - **Stock Movements**: Complete audit trail of all stock transactions
@@ -39,7 +39,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - **Pricing Control**: Cost price, selling price, and profit margin calculations
 - **Barcode Support**: SKU and barcode tracking for products
 
-### 💰 Sales & Financial Management
+### Sales & Financial Management
 - **Multiple Payment Methods**: Cash, Card, Mobile Money, Bank Transfer, Credit
 - **Invoice Generation**: Automatic invoice numbering and receipt printing
 - **Tax & Discount Support**: Tax calculation and discount application
@@ -48,7 +48,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - **Profit Analysis**: Real-time profit calculation on sales
 - **Sales History**: Complete sales audit trail with detailed reporting
 
-### 🛒 E-commerce Features
+### E-commerce Features
 - **Multi-Shop Support**: Each shop admin gets their own customizable website
 - **Product Showcase**: Featured products, categories, and search functionality
 - **Shopping Cart**: Session-based cart with add/update/remove operations
@@ -57,7 +57,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - **Website Themes**: Multiple theme options for shop customization
 - **Business Branding**: Logo upload and business information display
 
-## 🏗️ Technical Architecture
+## Technical Architecture
 
 ### Django Apps Structure
 - **`core`**: Main Django project configuration and settings
@@ -94,7 +94,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - **`Cart`/`CartItem`**: Shopping cart system
 - **`Order`/`OrderItem`**: Online order management system
 
-## 🚀 Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 - Python 3.8+
@@ -145,7 +145,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
    python manage.py runserver
    ```
 
-## 🌐 Application URLs & Access
+## Application URLs & Access
 
 ### Main Application
 - **Landing Page**: `http://127.0.0.1:8000/`
@@ -176,7 +176,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - **Manage Products**: `http://127.0.0.1:8000/shop/admin/products/`
 - **Manage Orders**: `http://127.0.0.1:8000/shop/admin/orders/`
 
-## 🔧 Configuration
+## Configuration
 
 ### Database Configuration
 - **Default**: SQLite database (`db.sqlite3`)
@@ -192,7 +192,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - **CSS/JS**: `/static/` directory
 - **Templates**: `/templates/` directory
 
-## 👥 User Roles & Permissions
+## User Roles & Permissions
 
 ### Site Administrator
 - ✅ Full system access
@@ -217,7 +217,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - ✅ Limited dashboard access
 - ✅ View own sales only
 
-## 📊 Reporting & Analytics
+## Reporting & Analytics
 
 ### Sales Reports
 - Daily/Weekly/Monthly sales summaries
@@ -238,7 +238,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - Payment method analysis
 - Profit margins
 
-## 🛡️ Security Features
+## Security Features
 
 - Role-based access control
 - Custom authentication backend
@@ -248,7 +248,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - XSS protection
 - Session security
 
-## 🎨 Frontend Features
+## Frontend Features
 
 ### Responsive Design
 - Mobile-friendly interface
@@ -262,7 +262,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - Dynamic product search
 - Interactive dashboard widgets
 
-## 📱 E-commerce Features
+## E-commerce Features
 
 ### Shop Customization
 - Multiple theme options
@@ -276,7 +276,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - Secure checkout process
 - Order tracking
 
-## 🔮 Advanced Features
+## Advanced Features
 
 ### Multi-Shop Support
 - Each shop admin gets independent website
@@ -290,7 +290,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - Email notifications
 - Print receipts and invoices
 
-## 🚀 Deployment Considerations
+## Deployment Considerations
 
 ### Production Setup
 - Use PostgreSQL/MySQL for production
@@ -305,7 +305,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - Image optimization
 - CDN integration
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -313,7 +313,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📝 Development Guidelines
+## Development Guidelines
 
 - Follow PEP 8 Python style guidelines
 - Write comprehensive tests
@@ -321,18 +321,20 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - Use meaningful commit messages
 - Maintain backward compatibility
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🆘 Support
+## Support
 
 For support and questions:
+- Phone: +254111363870
+- Email: esibitaremmanuel316@gmail.com
 - Create an issue in the repository
 - Check the documentation
 - Review the admin panel for configuration options
 
-## 🔄 Version History
+## Version History
 
 - **v1.0.0**: Initial release with core POS functionality
 - **v1.1.0**: Added e-commerce website integration
