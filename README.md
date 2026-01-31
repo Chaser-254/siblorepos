@@ -195,11 +195,11 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 ## User Roles & Permissions
 
 ### Site Administrator
-- ✅ Full system access
-- ✅ User management and approval
-- ✅ View all shops and reports
-- ✅ System configuration
-- ✅ Registration request management
+- Full system access
+- User management and approval
+- View all shops and reports
+- System configuration
+- Registration request management
 
 ### Shop Administrator
 - Shop management and configuration

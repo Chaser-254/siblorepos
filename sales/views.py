@@ -8,7 +8,7 @@ from decimal import Decimal
 import json
 from .models import Customer, Sale, SaleItem, Debt, DebtPayment, Revenue
 from products.models import Product, Stock, Category, StockMovement
-from users.decorators import admin_required, can_view_reports, get_user_profile
+from users.decorators import admin_required, can_view_reports, get_user_profile, get_shop_admin_for_user
 import uuid
 
 @login_required
@@ -16,26 +16,46 @@ def dashboard(request):
     # Get today's stats
     today = timezone.now().date()
     
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    
     # Get user profile
     if request.user.is_authenticated:
         profile = get_user_profile(request.user)
     else:
         profile = None
     
-    # Filter sales based on user role
+    # Filter sales based on user role and shop
     if profile and profile.can_view_own_sales_only():
-        # Cashiers can only see their own sales
+        # Cashiers can only see their own sales within their shop
+        if shop_admin:
+            today_sales = Sale.objects.filter(
+                created_at__date=today, 
+                status='COMPLETED',
+                created_by=request.user.username,
+                shop_admin=shop_admin
+            )
+            recent_sales = Sale.objects.filter(
+                status='COMPLETED',
+                created_by=request.user.username,
+                shop_admin=shop_admin
+            ).order_by('-created_at')[:10]
+        else:
+            today_sales = Sale.objects.none()
+            recent_sales = Sale.objects.none()
+    elif shop_admin:
+        # Shop admins can see all sales from their shop
         today_sales = Sale.objects.filter(
             created_at__date=today, 
             status='COMPLETED',
-            created_by=request.user.username
+            shop_admin=shop_admin
         )
         recent_sales = Sale.objects.filter(
             status='COMPLETED',
-            created_by=request.user.username
+            shop_admin=shop_admin
         ).order_by('-created_at')[:10]
     else:
-        # Admins can see all sales
+        # Site admins can see all sales
         today_sales = Sale.objects.filter(created_at__date=today, status='COMPLETED')
         recent_sales = Sale.objects.filter(status='COMPLETED').order_by('-created_at')[:10]
     
@@ -90,7 +110,13 @@ def dashboard(request):
 
 @login_required
 def pos_terminal(request):
-    products = Product.objects.filter(is_active=True).select_related('category').prefetch_related('stock_records')
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    if shop_admin:
+        products = Product.objects.filter(is_active=True, shop_admin=shop_admin).select_related('category').prefetch_related('stock_records')
+    else:
+        # Site admins can see all products
+        products = Product.objects.filter(is_active=True).select_related('category').prefetch_related('stock_records')
     categories = Category.objects.all()
     customers = Customer.objects.filter(is_active=True)
     
@@ -120,6 +146,11 @@ def process_sale(request):
             if customer_id:
                 customer = Customer.objects.get(id=customer_id)
             
+            # Get shop admin for the current user
+            shop_admin = get_shop_admin_for_user(request.user)
+            if not shop_admin:
+                return JsonResponse({'success': False, 'message': 'Access denied. No shop admin assigned.'})
+            
             sale = Sale.objects.create(
                 invoice_number=invoice_number,
                 customer=customer,
@@ -128,6 +159,7 @@ def process_sale(request):
                 subtotal=0,
                 total_amount=0,
                 notes=notes,
+                shop_admin=shop_admin,
                 created_by=request.user.username if request.user.is_authenticated else 'Anonymous'
             )
             
@@ -135,7 +167,11 @@ def process_sale(request):
             
             # Process each item
             for item_id, quantity in zip(items, quantities):
-                product = Product.objects.get(id=item_id)
+                # Get product filtered by shop
+                if shop_admin:
+                    product = get_object_or_404(Product.objects.filter(shop_admin=shop_admin), id=item_id)
+                else:
+                    product = get_object_or_404(Product, id=item_id)
                 quantity = int(quantity)
                 
                 # Check stock
@@ -218,18 +254,32 @@ def process_sale(request):
 
 @login_required
 def sales_list(request):
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    
     # Get user profile
     if request.user.is_authenticated:
         profile = get_user_profile(request.user)
     else:
         profile = None
     
-    # Filter sales based on user role
+    # Filter sales based on user role and shop
     if profile and profile.can_view_own_sales_only():
+        # Cashiers can only see their own sales within their shop
+        if shop_admin:
+            sales = Sale.objects.filter(
+                created_by=request.user.username,
+                shop_admin=shop_admin
+            ).select_related('customer').prefetch_related('sale_items').order_by('-created_at')
+        else:
+            sales = Sale.objects.none()
+    elif shop_admin:
+        # Shop admins can see all sales from their shop
         sales = Sale.objects.filter(
-            created_by=request.user.username
+            shop_admin=shop_admin
         ).select_related('customer').prefetch_related('sale_items').order_by('-created_at')
     else:
+        # Site admins can see all sales
         sales = Sale.objects.select_related('customer').prefetch_related('sale_items').order_by('-created_at')
     
     # Filters
@@ -264,12 +314,65 @@ def sales_list(request):
 
 @login_required
 def sale_detail(request, pk):
-    sale = get_object_or_404(Sale.objects.select_related('customer').prefetch_related('sale_items__product'), pk=pk)
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    
+    # Get user profile
+    if request.user.is_authenticated:
+        profile = get_user_profile(request.user)
+    else:
+        profile = None
+    
+    # Filter sale based on user role and shop
+    if profile and profile.can_view_own_sales_only():
+        # Cashiers can only see their own sales within their shop
+        if shop_admin:
+            sale = get_object_or_404(Sale.objects.filter(
+                created_by=request.user.username,
+                shop_admin=shop_admin
+            ).select_related('customer').prefetch_related('sale_items__product'), pk=pk)
+        else:
+            sale = get_object_or_404(Sale.objects.none(), pk=pk)
+    elif shop_admin:
+        # Shop admins can see all sales from their shop
+        sale = get_object_or_404(Sale.objects.filter(
+            shop_admin=shop_admin
+        ).select_related('customer').prefetch_related('sale_items__product'), pk=pk)
+    else:
+        # Site admins can see all sales
+        sale = get_object_or_404(Sale.objects.select_related('customer').prefetch_related('sale_items__product'), pk=pk)
+    
     return render(request, 'sales/sale_detail.html', {'sale': sale})
 
 @login_required
 def sale_receipt(request, pk):
-    sale = get_object_or_404(Sale.objects.select_related('customer').prefetch_related('sale_items__product'), pk=pk)
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    
+    # Get user profile
+    if request.user.is_authenticated:
+        profile = get_user_profile(request.user)
+    else:
+        profile = None
+    
+    # Filter sale based on user role and shop
+    if profile and profile.can_view_own_sales_only():
+        # Cashiers can only see their own sales within their shop
+        if shop_admin:
+            sale = get_object_or_404(Sale.objects.filter(
+                created_by=request.user.username,
+                shop_admin=shop_admin
+            ).select_related('customer').prefetch_related('sale_items__product'), pk=pk)
+        else:
+            sale = get_object_or_404(Sale.objects.none(), pk=pk)
+    elif shop_admin:
+        # Shop admins can see all sales from their shop
+        sale = get_object_or_404(Sale.objects.filter(
+            shop_admin=shop_admin
+        ).select_related('customer').prefetch_related('sale_items__product'), pk=pk)
+    else:
+        # Site admins can see all sales
+        sale = get_object_or_404(Sale.objects.select_related('customer').prefetch_related('sale_items__product'), pk=pk)
     
     # Get business information from the current user's profile or system defaults
     business_info = {
@@ -318,7 +421,33 @@ def sale_receipt(request, pk):
 
 @login_required
 def sale_delete(request, pk):
-    sale = get_object_or_404(Sale.objects.select_related('customer').prefetch_related('sale_items'), pk=pk)
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    
+    # Get user profile
+    if request.user.is_authenticated:
+        profile = get_user_profile(request.user)
+    else:
+        profile = None
+    
+    # Filter sale based on user role and shop
+    if profile and profile.can_view_own_sales_only():
+        # Cashiers can only see their own sales within their shop
+        if shop_admin:
+            sale = get_object_or_404(Sale.objects.filter(
+                created_by=request.user.username,
+                shop_admin=shop_admin
+            ).select_related('customer').prefetch_related('sale_items'), pk=pk)
+        else:
+            sale = get_object_or_404(Sale.objects.none(), pk=pk)
+    elif shop_admin:
+        # Shop admins can see all sales from their shop
+        sale = get_object_or_404(Sale.objects.filter(
+            shop_admin=shop_admin
+        ).select_related('customer').prefetch_related('sale_items'), pk=pk)
+    else:
+        # Site admins can see all sales
+        sale = get_object_or_404(Sale.objects.select_related('customer').prefetch_related('sale_items'), pk=pk)
     
     # Get user profile
     if request.user.is_authenticated:
@@ -445,6 +574,9 @@ def pay_debt(request, pk):
 
 @can_view_reports
 def reports(request):
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    
     # Get date range
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
@@ -455,13 +587,25 @@ def reports(request):
         date_to = timezone.now().date()
     
     # Get revenue data
-    revenues = Revenue.objects.filter(date__range=[date_from, date_to]).order_by('date')
+    if shop_admin:
+        revenues = Revenue.objects.filter(date__range=[date_from, date_to]).order_by('date')
+        # Note: Revenue model doesn't have shop_admin field, so shop admins will see all revenue data
+        # This might need to be addressed in a future update
+    else:
+        revenues = Revenue.objects.filter(date__range=[date_from, date_to]).order_by('date')
     
-    # Get sales data
-    sales = Sale.objects.filter(
-        created_at__date__range=[date_from, date_to],
-        status='COMPLETED'
-    ).select_related('customer').prefetch_related('sale_items__product')
+    # Get sales data filtered by shop
+    if shop_admin:
+        sales = Sale.objects.filter(
+            created_at__date__range=[date_from, date_to],
+            status='COMPLETED',
+            shop_admin=shop_admin
+        ).select_related('customer').prefetch_related('sale_items__product')
+    else:
+        sales = Sale.objects.filter(
+            created_at__date__range=[date_from, date_to],
+            status='COMPLETED'
+        ).select_related('customer').prefetch_related('sale_items__product')
     
     # Calculate totals
     total_sales = revenues.aggregate(total=Sum('total_sales'))['total'] or 0
@@ -500,6 +644,9 @@ def reports(request):
 
 @can_view_reports
 def report_print(request):
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    
     # Get date range
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
@@ -510,13 +657,25 @@ def report_print(request):
         date_to = timezone.now().date()
     
     # Get revenue data
-    revenues = Revenue.objects.filter(date__range=[date_from, date_to]).order_by('date')
+    if shop_admin:
+        revenues = Revenue.objects.filter(date__range=[date_from, date_to]).order_by('date')
+        # Note: Revenue model doesn't have shop_admin field, so shop admins will see all revenue data
+        # This might need to be addressed in a future update
+    else:
+        revenues = Revenue.objects.filter(date__range=[date_from, date_to]).order_by('date')
     
-    # Get sales data
-    sales = Sale.objects.filter(
-        created_at__date__range=[date_from, date_to],
-        status='COMPLETED'
-    ).select_related('customer').prefetch_related('sale_items__product')
+    # Get sales data filtered by shop
+    if shop_admin:
+        sales = Sale.objects.filter(
+            created_at__date__range=[date_from, date_to],
+            status='COMPLETED',
+            shop_admin=shop_admin
+        ).select_related('customer').prefetch_related('sale_items__product')
+    else:
+        sales = Sale.objects.filter(
+            created_at__date__range=[date_from, date_to],
+            status='COMPLETED'
+        ).select_related('customer').prefetch_related('sale_items__product')
     
     # Calculate totals
     total_sales = revenues.aggregate(total=Sum('total_sales'))['total'] or 0

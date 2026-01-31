@@ -9,6 +9,15 @@ def get_user_profile(user):
     profile, created = UserProfile.objects.get_or_create(user=user)
     return profile
 
+def get_shop_admin_for_user(user):
+    """Get the shop admin for the current user (for cashiers, returns their shop admin; for shop admins, returns themselves)"""
+    profile = get_user_profile(user)
+    if profile.is_cashier and profile.shop_admin:
+        return profile.shop_admin
+    elif profile.is_shop_admin:
+        return profile
+    return None
+
 def admin_required(view_func):
     @wraps(view_func)
     @login_required

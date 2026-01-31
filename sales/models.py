@@ -3,6 +3,7 @@ from django.core.validators import MinValueValidator
 from decimal import Decimal
 from django.utils import timezone
 from products.models import Product
+from users.models import UserProfile
 
 class Customer(models.Model):
     name = models.CharField(max_length=200)
@@ -54,6 +55,7 @@ class Sale(models.Model):
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     change_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     notes = models.TextField(blank=True)
+    shop_admin = models.ForeignKey(UserProfile, on_delete=models.CASCADE, limit_choices_to={'role': 'SHOP_ADMIN'}, related_name='sales')
     created_by = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

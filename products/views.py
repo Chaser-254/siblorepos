@@ -6,14 +6,20 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from .models import Category, Product, Stock, StockMovement
 from .forms import ProductForm, CategoryForm, StockForm, StockAdjustmentForm
-from users.decorators import can_manage_products
+from users.decorators import can_manage_products, get_shop_admin_for_user
 
 @login_required
 def product_list(request):
     query = request.GET.get('q', '')
     category_id = request.GET.get('category', '')
     
-    products = Product.objects.select_related('category').prefetch_related('stock_records')
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    if shop_admin:
+        products = Product.objects.filter(shop_admin=shop_admin).select_related('category').prefetch_related('stock_records')
+    else:
+        # Site admins can see all products
+        products = Product.objects.select_related('category').prefetch_related('stock_records')
     
     if query:
         products = products.filter(
@@ -44,7 +50,14 @@ def product_create(request):
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
-            product = form.save()
+            # Get shop admin for the current user
+            shop_admin = get_shop_admin_for_user(request.user)
+            if shop_admin:
+                product = form.save(commit=False)
+                product.shop_admin = shop_admin
+                product.save()
+            else:
+                product = form.save()
             Stock.objects.create(product=product, quantity=0)
             messages.success(request, f'Product "{product.name}" created successfully!')
             return redirect('products:product_list')
@@ -55,7 +68,13 @@ def product_create(request):
 
 @login_required
 def product_detail(request, pk):
-    product = get_object_or_404(Product.objects.select_related('category').prefetch_related('stock_records', 'stock_movements'), pk=pk)
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    if shop_admin:
+        product = get_object_or_404(Product.objects.filter(shop_admin=shop_admin).select_related('category').prefetch_related('stock_records', 'stock_movements'), pk=pk)
+    else:
+        # Site admins can see all products
+        product = get_object_or_404(Product.objects.select_related('category').prefetch_related('stock_records', 'stock_movements'), pk=pk)
     stock = product.stock_records.first()
     movements = product.stock_movements.all()[:10]
     
@@ -77,7 +96,13 @@ def product_detail(request, pk):
 
 @can_manage_products
 def product_update(request, pk):
-    product = get_object_or_404(Product, pk=pk)
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    if shop_admin:
+        product = get_object_or_404(Product.objects.filter(shop_admin=shop_admin), pk=pk)
+    else:
+        # Site admins can see all products
+        product = get_object_or_404(Product, pk=pk)
     
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES, instance=product)
@@ -92,7 +117,13 @@ def product_update(request, pk):
 
 @can_manage_products
 def product_delete(request, pk):
-    product = get_object_or_404(Product, pk=pk)
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    if shop_admin:
+        product = get_object_or_404(Product.objects.filter(shop_admin=shop_admin), pk=pk)
+    else:
+        # Site admins can see all products
+        product = get_object_or_404(Product, pk=pk)
     
     if request.method == 'POST':
         confirm_name = request.POST.get('confirm_name', '')
@@ -114,7 +145,14 @@ def category_list(request):
 @login_required
 def category_detail(request, pk):
     category = get_object_or_404(Category, pk=pk)
-    products = Product.objects.filter(category=category).select_related('category').prefetch_related('stock_records')
+    
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    if shop_admin:
+        products = Product.objects.filter(category=category, shop_admin=shop_admin).select_related('category').prefetch_related('stock_records')
+    else:
+        # Site admins can see all products
+        products = Product.objects.filter(category=category).select_related('category').prefetch_related('stock_records')
     
     # Search functionality
     query = request.GET.get('q', '')
@@ -202,19 +240,33 @@ def category_delete(request, pk):
 
 @login_required
 def stock_list(request):
-    stocks = Stock.objects.select_related('product', 'product__category').filter(is_active=True).order_by('product__name')
-    
-    # Filter by low stock
-    low_stock = request.GET.get('low_stock')
-    if low_stock:
-        stocks = stocks.filter(quantity__lte=F('reorder_level'))
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    if shop_admin:
+        stocks = Stock.objects.filter(product__shop_admin=shop_admin, is_active=True).select_related('product', 'product__category').order_by('product__name')
+        
+        # Filter by low stock
+        low_stock = request.GET.get('low_stock')
+        if low_stock:
+            stocks = stocks.filter(quantity__lte=F('reorder_level'))
+        
+        # Calculate low stock count for this shop
+        low_stock_count = Stock.objects.filter(product__shop_admin=shop_admin, is_active=True, quantity__lte=F('reorder_level')).count()
+    else:
+        # Site admins can see all stocks
+        stocks = Stock.objects.select_related('product', 'product__category').filter(is_active=True).order_by('product__name')
+        
+        # Filter by low stock
+        low_stock = request.GET.get('low_stock')
+        if low_stock:
+            stocks = stocks.filter(quantity__lte=F('reorder_level'))
+        
+        # Calculate low stock count
+        low_stock_count = Stock.objects.filter(is_active=True, quantity__lte=F('reorder_level')).count()
     
     paginator = Paginator(stocks, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
-    # Calculate low stock count
-    low_stock_count = Stock.objects.filter(is_active=True, quantity__lte=F('reorder_level')).count()
     
     context = {
         'page_obj': page_obj,
@@ -268,28 +320,51 @@ def stock_adjust(request, pk):
 
 @login_required
 def stock_movements(request):
-    movements = StockMovement.objects.select_related('product').order_by('-created_at')
-    
-    # Filter by product
-    product_id = request.GET.get('product')
-    if product_id:
-        movements = movements.filter(product_id=product_id)
-    
-    # Filter by movement type
-    movement_type = request.GET.get('movement_type')
-    if movement_type:
-        movements = movements.filter(movement_type=movement_type)
-    
-    # Calculate statistics
-    stock_in_count = movements.filter(movement_type='IN').count()
-    stock_out_count = movements.filter(movement_type='OUT').count()
-    adjustment_count = movements.filter(movement_type='ADJUST').count()
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    if shop_admin:
+        movements = StockMovement.objects.filter(product__shop_admin=shop_admin).select_related('product').order_by('-created_at')
+        
+        # Filter by product
+        product_id = request.GET.get('product')
+        if product_id:
+            movements = movements.filter(product_id=product_id)
+        
+        # Filter by movement type
+        movement_type = request.GET.get('movement_type')
+        if movement_type:
+            movements = movements.filter(movement_type=movement_type)
+        
+        # Calculate statistics for this shop
+        stock_in_count = movements.filter(movement_type='IN').count()
+        stock_out_count = movements.filter(movement_type='OUT').count()
+        adjustment_count = movements.filter(movement_type='ADJUST').count()
+        
+        products = Product.objects.filter(shop_admin=shop_admin)
+    else:
+        # Site admins can see all movements
+        movements = StockMovement.objects.select_related('product').order_by('-created_at')
+        
+        # Filter by product
+        product_id = request.GET.get('product')
+        if product_id:
+            movements = movements.filter(product_id=product_id)
+        
+        # Filter by movement type
+        movement_type = request.GET.get('movement_type')
+        if movement_type:
+            movements = movements.filter(movement_type=movement_type)
+        
+        # Calculate statistics
+        stock_in_count = movements.filter(movement_type='IN').count()
+        stock_out_count = movements.filter(movement_type='OUT').count()
+        adjustment_count = movements.filter(movement_type='ADJUST').count()
+        
+        products = Product.objects.all()
     
     paginator = Paginator(movements, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
-    products = Product.objects.all()
     
     context = {
         'page_obj': page_obj,
