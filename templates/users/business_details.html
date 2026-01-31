@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Business Details - {{ shop_name|default:"SibLore POS" }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Business Details</h1>
+                <p class="text-gray-600 mt-1">Update your shop information and contact details</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-store text-blue-600 text-2xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Business Details Form -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form method="post" id="business-form">
+            {% csrf_token %}
+            
+            <!-- Form Header -->
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-2">Shop Information</h2>
+                <p class="text-sm text-gray-600">These details will appear on your sales receipts and invoices</p>
+            </div>
+
+            <!-- Form Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Shop Name -->
+                <div class="md:col-span-2">
+                    <label for="{{ form.shop_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-store mr-1"></i>Shop Name *
+                    </label>
+                    {{ form.shop_name }}
+                    {% if form.shop_name.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.shop_name.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Shop Address -->
+                <div class="md:col-span-2">
+                    <label for="{{ form.shop_address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-map-marker-alt mr-1"></i>Shop Address
+                    </label>
+                    {{ form.shop_address }}
+                    {% if form.shop_address.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.shop_address.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Shop City -->
+                <div>
+                    <label for="{{ form.shop_city.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-city mr-1"></i>City
+                    </label>
+                    {{ form.shop_city }}
+                    {% if form.shop_city.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.shop_city.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Shop Phone -->
+                <div>
+                    <label for="{{ form.shop_phone.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-phone mr-1"></i>Business Phone
+                    </label>
+                    {{ form.shop_phone }}
+                    {% if form.shop_phone.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.shop_phone.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Shop Email -->
+                <div class="md:col-span-2">
+                    <label for="{{ form.shop_email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope mr-1"></i>Business Email
+                    </label>
+                    {{ form.shop_email }}
+                    {% if form.shop_email.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.shop_email.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Current Business Card Preview -->
+            {% if profile.shop_name %}
+            <div class="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">
+                    <i class="fas fa-eye mr-1"></i>Receipt Preview
+                </h3>
+                <div class="bg-white p-4 rounded border border-gray-300 text-sm">
+                    <div class="text-center font-bold text-lg mb-2">{{ profile.shop_name|default:"Your Shop Name" }}</div>
+                    {% if profile.shop_address %}
+                    <div class="text-center text-gray-600">{{ profile.shop_address }}{% if profile.shop_city %}, {{ profile.shop_city }}{% endif %}</div>
+                    {% endif %}
+                    {% if profile.shop_phone %}
+                    <div class="text-center text-gray-600">{{ profile.shop_phone }}</div>
+                    {% endif %}
+                    {% if profile.shop_email %}
+                    <div class="text-center text-gray-600">{{ profile.shop_email }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="mt-8 flex justify-end space-x-4">
+                <a href="{% url 'sales:dashboard' %}" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-save mr-2"></i>Save Business Details
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Help Section -->
+    <div class="mt-6 bg-blue-50 rounded-lg p-6">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="fas fa-info-circle text-blue-600 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-900">Business Information Tips</h3>
+                <div class="mt-2 text-sm text-blue-700">
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Your shop name will appear on all sales receipts and invoices</li>
+                        <li>Complete contact information helps customers reach your business</li>
+                        <li>Address information is useful for delivery and customer service</li>
+                        <li>Business phone and email should be regularly monitored</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-save functionality (optional)
+    const form = document.getElementById('business-form');
+    const inputs = form.querySelectorAll('input, textarea');
+    
+    // Add focus effects
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
+        });
+    });
+
+    // Form validation feedback
+    form.addEventListener('submit', function(e) {
+        const shopName = document.getElementById('{{ form.shop_name.id_for_label }}');
+        if (!shopName.value.trim()) {
+            e.preventDefault();
+            alert('Shop name is required for business operations.');
+            shopName.focus();
+        }
+    });
+});
+</script>
+{% endblock %}

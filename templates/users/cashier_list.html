@@ -1,68 +1,189 @@
 {% extends 'base.html' %}
 
-{% block title %}Cashiers - POS System{% endblock %}
+{% block title %}Cashier Management - POS System{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Cashier Management</h1>
-    <a href="{% url 'users:cashier_create' %}" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Add Cashier
-    </a>
-</div>
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Cashier Management</h1>
+                <p class="mt-2 text-sm text-gray-600">Manage cashiers and their access permissions</p>
+            </div>
+            <a href="{% url 'users:cashier_create' %}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                <i class="fas fa-plus mr-2"></i>
+                Add Cashier
+            </a>
+        </div>
+    </div>
 
-{% if user.userprofile.shop_name %}
-<div class="alert alert-info mb-4">
-    <i class="fas fa-store mr-2"></i>
-    <strong>Shop:</strong> {{ user.userprofile.shop_name }}
-</div>
-{% endif %}
+    <!-- Shop Information -->
+    {% if user.profile.shop_name %}
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <i class="fas fa-store text-blue-600 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-800">Current Shop</h3>
+                <p class="text-sm text-blue-700">{{ user.profile.shop_name }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <i class="fas fa-user-tie text-green-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Active Cashiers</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ cashiers|length }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-yellow-100 rounded-lg">
+                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Cashiers</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ cashiers|length }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 rounded-lg">
+                    <i class="fas fa-cash-register text-purple-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">POS Access</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ cashiers|length }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cashiers Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">All Cashiers</h2>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
                     <tr>
-                        <th>Username</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Shop</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Cashier
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Contact
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Phone
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Shop
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="bg-white divide-y divide-gray-200">
                     {% for cashier in cashiers %}
-                    <tr>
-                        <td>{{ cashier.username }}</td>
-                        <td>{{ cashier.get_full_name|default:cashier.username }}</td>
-                        <td>{{ cashier.email }}</td>
-                        <td>{{ cashier.userprofile.phone|default:"-" }}</td>
-                        <td>{{ cashier.userprofile.shop_admin.shop_name|default:"-" }}</td>
-                        <td>
-                            {% if cashier.userprofile.is_active %}
-                                <span class="badge bg-success">Active</span>
-                            {% else %}
-                                <span class="badge bg-danger">Inactive</span>
-                            {% endif %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                        <i class="fas fa-user-tie text-green-600"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ cashier.username }}</div>
+                                    <div class="text-sm text-gray-500">{{ cashier.get_full_name|default:"No name" }}</div>
+                                </div>
+                            </div>
                         </td>
-                        <td>
-                            <a href="{% url 'users:cashier_update' cashier.pk %}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-edit"></i> Edit
-                            </a>
-                            <a href="{% url 'users:cashier_toggle_active' cashier.pk %}" class="btn btn-sm btn-outline-warning">
-                                {% if cashier.profile.is_active %}
-                                    <i class="fas fa-ban"></i> Deactivate
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                {% if cashier.email %}
+                                    <i class="fas fa-envelope mr-1 text-gray-400"></i>
+                                    {{ cashier.email }}
                                 {% else %}
-                                    <i class="fas fa-check"></i> Activate
+                                    <span class="text-gray-400">No email</span>
                                 {% endif %}
-                            </a>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                {% if cashier.profile.phone %}
+                                    <i class="fas fa-phone mr-1 text-gray-400"></i>
+                                    {{ cashier.profile.phone }}
+                                {% else %}
+                                    <span class="text-gray-400">No phone</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                {% if cashier.profile.shop_admin.shop_name %}
+                                    <i class="fas fa-building mr-1 text-gray-400"></i>
+                                    {{ cashier.profile.shop_admin.shop_name }}
+                                {% else %}
+                                    <span class="text-gray-400">-</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if cashier.profile.is_active %}bg-green-100 text-green-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                <span class="w-2 h-2 mr-1 rounded-full 
+                                    {% if cashier.profile.is_active %}bg-green-400
+                                    {% else %}bg-red-400{% endif %}"></span>
+                                {% if cashier.profile.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <a href="{% url 'users:cashier_update' cashier.pk %}" 
+                                   class="text-blue-600 hover:text-blue-900 transition-colors"
+                                   title="Edit Cashier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'users:cashier_toggle_active' cashier.pk %}" 
+                                   class="{% if cashier.profile.is_active %}text-yellow-600 hover:text-yellow-900{% else %}text-green-600 hover:text-green-900{% endif %} transition-colors"
+                                   title="{% if cashier.profile.is_active %}Deactivate{% else %}Activate{% endif %} Cashier">
+                                    <i class="fas 
+                                        {% if cashier.profile.is_active %}fa-ban
+                                        {% else %}fa-check{% endif %}"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center">No cashiers found</td>
+                        <td colspan="6" class="px-6 py-12 text-center">
+                            <div class="text-gray-400">
+                                <i class="fas fa-user-tie text-4xl mb-4"></i>
+                                <p class="text-lg font-medium">No cashiers found</p>
+                                <p class="text-sm mt-1">Get started by adding your first cashier</p>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

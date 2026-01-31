@@ -18,6 +18,7 @@ urlpatterns = [
     path('cashiers/<int:pk>/update/', views.cashier_update, name='cashier_update'),
     path('cashiers/<int:pk>/toggle-active/', views.cashier_toggle_active, name='cashier_toggle_active'),
     path('dashboard/', views.user_list, name='user_list'),
+    path('business-details/', views.business_details, name='business_details'),
     path('create/', views.user_create, name='user_create'),
     path('user/<int:pk>/update/', views.user_update, name='user_update'),
     path('user/<int:pk>/toggle-active/', views.user_toggle_active, name='user_toggle_active'),

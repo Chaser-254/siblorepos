@@ -51,13 +51,13 @@
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${{ customer.credit_limit|floatformat:2 }}
+                            {{ customer.credit_limit|floatformat:2 }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {% if customer.total_debt_amount > 0 %}text-red-600{% else %}text-green-600{% endif %}">
-                            ${{ customer.total_debt_amount|floatformat:2 }}
+                            {{ customer.total_debt_amount|floatformat:2 }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {% if customer.available_credit > 0 %}text-green-600{% else %}text-red-600{% endif %}">
-                            ${{ customer.available_credit|floatformat:2 }}
+                            {{ customer.available_credit|floatformat:2 }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             {% if customer.is_active %}

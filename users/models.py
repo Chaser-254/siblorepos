@@ -8,11 +8,15 @@ class UserProfile(models.Model):
         ('CASHIER', 'Cashier'),
     ]
     
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='CASHIER')
     phone = models.CharField(max_length=20, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     shop_name = models.CharField(max_length=100, blank=True, null=True, help_text="Business/Shop name for Shop Admins")
+    shop_address = models.CharField(max_length=200, blank=True, null=True, help_text="Business address")
+    shop_city = models.CharField(max_length=100, blank=True, null=True, help_text="Business city")
+    shop_phone = models.CharField(max_length=20, blank=True, null=True, help_text="Business phone")
+    shop_email = models.EmailField(blank=True, null=True, help_text="Business email")
     shop_admin = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, 
                                    limit_choices_to={'role': 'SHOP_ADMIN'}, 
                                    related_name='cashiers',
@@ -25,6 +29,11 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return f"{self.user.username} ({self.get_role_display()})"
+    
+    @property
+    def is_admin(self):
+        """Check if user is any type of admin (site admin or shop admin)"""
+        return self.is_site_admin or self.is_shop_admin
     
     @property
     def is_site_admin(self):

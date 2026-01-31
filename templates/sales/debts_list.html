@@ -58,13 +58,13 @@
                             </a>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${{ debt.amount|floatformat:2 }}
+                            {{ debt.amount|floatformat:2 }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${{ debt.amount_paid|floatformat:2 }}
+                            {{ debt.amount_paid|floatformat:2 }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {% if debt.balance > 0 %}text-red-600{% else %}text-green-600{% endif %}">
-                            ${{ debt.balance|floatformat:2 }}
+                            {{ debt.balance|floatformat:2 }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ debt.due_date|date:"M d, Y" }}

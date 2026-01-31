@@ -7,7 +7,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Sum, Count, F
 from django.utils import timezone
 from .models import UserProfile, RegistrationRequest
-from .forms import UserCreationForm, UserUpdateForm, CashierCreationForm, CashierUpdateForm
+from .forms import UserCreationForm, UserUpdateForm, CashierCreationForm, CashierUpdateForm, BusinessDetailsForm
 from .decorators import get_user_profile
 
 def landing_page(request):
@@ -21,7 +21,7 @@ def login_view(request):
         # Redirect based on user type
         if request.user.is_superuser:
             return redirect('users:site_owner_dashboard')
-        elif request.user.userprofile.is_shop_admin:
+        elif request.user.profile.is_shop_admin:
             return redirect('users:shop_admin_dashboard')
         else:
             return redirect('sales:dashboard')
@@ -41,7 +41,7 @@ def login_view(request):
                 # Redirect based on user type
                 if user.is_superuser:
                     return redirect('users:site_owner_dashboard')
-                elif user.userprofile.is_shop_admin:
+                elif user.profile.is_shop_admin:
                     return redirect('users:shop_admin_dashboard')
                 else:
                     return redirect('sales:dashboard')
@@ -286,7 +286,7 @@ def site_owner_dashboard(request):
     
     # Recent activity
     recent_sales = Sale.objects.select_related('customer').order_by('-created_at')[:5]
-    recent_users = User.objects.select_related('userprofile').order_by('-date_joined')[:5]
+    recent_users = User.objects.select_related('profile').order_by('-date_joined')[:5]
     recent_requests = RegistrationRequest.objects.order_by('-created_at')[:5]
     
     # System health
@@ -336,9 +336,9 @@ def cashier_list(request):
     
     # Only show cashiers for this shop admin (or all for site admin)
     if profile.is_site_admin:
-        cashiers = User.objects.filter(userprofile__role='CASHIER').select_related('userprofile').order_by('username')
+        cashiers = User.objects.filter(profile__role='CASHIER').select_related('profile').order_by('username')
     else:
-        cashiers = User.objects.filter(userprofile__role='CASHIER', userprofile__shop_admin=profile).select_related('userprofile').order_by('username')
+        cashiers = User.objects.filter(profile__role='CASHIER', profile__shop_admin=profile).select_related('profile').order_by('username')
     
     return render(request, 'users/cashier_list.html', {'cashiers': cashiers})
 
@@ -385,12 +385,12 @@ def cashier_update(request, pk):
         return redirect('sales:dashboard')
     
     user = get_object_or_404(User, pk=pk)
-    if user.userprofile.role != 'CASHIER':
+    if user.profile.role != 'CASHIER':
         messages.error(request, 'This user is not a cashier.')
         return redirect('users:cashier_list')
     
     # Check if shop admin can only manage their own cashiers
-    if profile.is_shop_admin and user.userprofile.shop_admin != profile:
+    if profile.is_shop_admin and user.profile.shop_admin != profile:
         messages.error(request, 'Access denied. You can only manage your own cashiers.')
         return redirect('users:cashier_list')
     
@@ -399,7 +399,7 @@ def cashier_update(request, pk):
         if form.is_valid():
             form.save()
             # Update user profile
-            user_profile = user.userprofile
+            user_profile = user.profile
             user_profile.phone = form.cleaned_data['phone']
             user_profile.is_active = form.cleaned_data['is_active']
             user_profile.save()
@@ -423,16 +423,16 @@ def cashier_toggle_active(request, pk):
         return redirect('sales:dashboard')
     
     user = get_object_or_404(User, pk=pk)
-    if user.userprofile.role != 'CASHIER':
+    if user.profile.role != 'CASHIER':
         messages.error(request, 'This user is not a cashier.')
         return redirect('users:cashier_list')
     
     # Check if shop admin can only manage their own cashiers
-    if profile.is_shop_admin and user.userprofile.shop_admin != profile:
+    if profile.is_shop_admin and user.profile.shop_admin != profile:
         messages.error(request, 'Access denied. You can only manage your own cashiers.')
         return redirect('users:cashier_list')
     
-    user_profile = user.userprofile
+    user_profile = user.profile
     user_profile.is_active = not user_profile.is_active
     user_profile.save()
     
@@ -450,8 +450,31 @@ def user_list(request):
         messages.error(request, 'Access denied. User management requires site admin privileges.')
         return redirect('sales:dashboard')
     
-    users = User.objects.all().select_related('userprofile').order_by('username')
+    users = User.objects.all().select_related('profile').order_by('username')
     return render(request, 'users/user_list.html', {'users': users})
+
+@login_required
+def business_details(request):
+    """View for shop admins to update their business details"""
+    if not request.user.is_authenticated:
+        messages.error(request, 'Please login to access business settings.')
+        return redirect('sales:dashboard')
+    
+    profile = get_user_profile(request.user)
+    if not profile.is_shop_admin:
+        messages.error(request, 'Access denied. Business settings require shop admin privileges.')
+        return redirect('sales:dashboard')
+    
+    if request.method == 'POST':
+        form = BusinessDetailsForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Business details updated successfully!')
+            return redirect('users:business_details')
+    else:
+        form = BusinessDetailsForm(instance=profile)
+    
+    return render(request, 'users/business_details.html', {'form': form, 'profile': profile})
 
 def user_create(request):
     if not request.user.is_authenticated:
@@ -498,7 +521,7 @@ def user_update(request, pk):
         if form.is_valid():
             form.save()
             # Update user profile
-            user_profile = user.userprofile
+            user_profile = user.profile
             user_profile.role = form.cleaned_data['role']
             user_profile.phone = form.cleaned_data['phone']
             user_profile.is_active = form.cleaned_data['is_active']
@@ -509,10 +532,10 @@ def user_update(request, pk):
             return redirect('users:user_list')
     else:
         form = UserUpdateForm(instance=user, initial={
-            'role': user.userprofile.role,
-            'phone': user.userprofile.phone,
-            'is_active': user.userprofile.is_active,
-            'shop_name': user.userprofile.shop_name,
+            'role': user.profile.role,
+            'phone': user.profile.phone,
+            'is_active': user.profile.is_active,
+            'shop_name': user.profile.shop_name,
         })
     
     return render(request, 'users/user_form.html', {'form': form, 'title': 'Update User', 'user': user})
@@ -528,7 +551,7 @@ def user_toggle_active(request, pk):
         return redirect('sales:dashboard')
     
     user = get_object_or_404(User, pk=pk)
-    user_profile = user.userprofile
+    user_profile = user.profile
     user_profile.is_active = not user_profile.is_active
     user_profile.save()
     

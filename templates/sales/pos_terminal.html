@@ -387,7 +387,7 @@ processSaleBtn.addEventListener('click', async function() {
         
         if (result.success) {
             document.getElementById('invoiceNumber').textContent = result.invoice_number;
-            document.getElementById('saleTotal').textContent = `$${result.total_amount.toFixed(2)}`;
+            document.getElementById('saleTotal').textContent = result.total_amount.toFixed(2);
             // Store sale ID for receipt printing
             document.getElementById('printReceipt').dataset.saleId = result.sale_id;
             successModal.classList.remove('hidden');

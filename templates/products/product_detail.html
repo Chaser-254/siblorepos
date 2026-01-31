@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - SibLore POS{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex items-center mb-6">
+        <a href="{% url 'products:product_list' %}" class="text-gray-600 hover:text-gray-900 mr-4">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Products
+        </a>
+        {% if product.category %}
+            <a href="{% url 'products:category_detail' product.category.pk %}" class="text-gray-600 hover:text-gray-900 mr-4">
+                <i class="fas fa-tags mr-2"></i>{{ product.category.name }}
+            </a>
+        {% endif %}
+    </div>
+    
+    <!-- Product Header -->
+    <div class="bg-white rounded-lg shadow mb-6">
+        <div class="p-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex items-center mb-4 lg:mb-0">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                             class="w-24 h-24 rounded-lg object-cover mr-6">
+                    {% else %}
+                        <div class="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center mr-6">
+                            <i class="fas fa-box text-gray-400 text-3xl"></i>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">{{ product.name }}</h1>
+                        <p class="text-gray-600 mt-1">SKU: {{ product.sku }}</p>
+                        {% if product.barcode %}
+                            <p class="text-gray-500 text-sm">Barcode: {{ product.barcode }}</p>
+                        {% endif %}
+                        {% if product.category %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-2">
+                                <i class="fas fa-tag mr-1"></i>{{ product.category.name }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if user.is_authenticated and user.profile.can_manage_products %}
+                    <div class="flex space-x-3">
+                        <a href="{% url 'products:product_update' product.pk %}" 
+                           class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-edit mr-2"></i>Edit Product
+                        </a>
+                        <a href="{% url 'products:product_delete' product.pk %}" 
+                           class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+                            <i class="fas fa-trash mr-2"></i>Delete Product
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Product Information Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Pricing Information -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-dollar-sign text-green-600 mr-2"></i>Pricing Information
+            </h3>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Selling Price:</span>
+                    <span class="text-2xl font-bold text-green-600">{{ product.selling_price|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Cost Price:</span>
+                    <span class="text-lg font-semibold text-gray-900">{{ product.cost_price|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between items-center pt-3 border-t border-gray-200">
+                    <span class="text-gray-600">Profit Margin:</span>
+                    <span class="text-lg font-semibold {% if product.profit_margin >= 30 %}text-green-600{% elif product.profit_margin >= 15 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                        {{ product.profit_margin|floatformat:1 }}%
+                    </span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Profit per Unit:</span>
+                    <span class="font-semibold text-gray-900">{{ profit_per_unit|floatformat:2 }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stock Information -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-warehouse text-blue-600 mr-2"></i>Stock Information
+            </h3>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Current Stock:</span>
+                    <span class="text-2xl font-bold {% if stock.quantity == 0 %}text-red-600{% elif stock.quantity <= 10 %}text-yellow-600{% else %}text-green-600{% endif %}">
+                        {{ stock.quantity }} units
+                    </span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Reorder Level:</span>
+                    <span class="font-semibold text-gray-900">{{ stock.reorder_level }} units</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Max Stock:</span>
+                    <span class="font-semibold text-gray-900">{{ stock.max_stock }} units</span>
+                </div>
+                <div class="flex justify-between items-center pt-3 border-t border-gray-200">
+                    <span class="text-gray-600">Total Value:</span>
+                    <span class="text-lg font-bold text-gray-900">{{ total_stock_value|floatformat:2 }}</span>
+                </div>
+                {% if stock.location %}
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Location:</span>
+                    <span class="font-semibold text-gray-900">{{ stock.location }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% if user.is_authenticated and user.profile.can_manage_products %}
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <a href="{% url 'products:stock_adjust' stock.pk %}" 
+                       class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-center block">
+                        <i class="fas fa-adjust mr-2"></i>Adjust Stock
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Product Status -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-info-circle text-purple-600 mr-2"></i>Product Status
+            </h3>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Status:</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if product.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                        {% if product.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Created:</span>
+                    <span class="font-semibold text-gray-900">{{ product.created_at|date:"M d, Y" }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Last Updated:</span>
+                    <span class="font-semibold text-gray-900">{{ product.updated_at|date:"M d, Y" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Product Description -->
+    {% if product.description %}
+    <div class="bg-white rounded-lg shadow mb-6">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-align-left text-indigo-600 mr-2"></i>Description
+            </h3>
+            <p class="text-gray-700 leading-relaxed">{{ product.description|linebreaks }}</p>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Recent Stock Movements -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-history text-orange-600 mr-2"></i>Recent Stock Movements
+                </h3>
+                <a href="{% url 'products:stock_movements' %}?product={{ product.pk }}" 
+                   class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    View All Movements
+                </a>
+            </div>
+            
+            {% if movements %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">By</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for movement in movements %}
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ movement.created_at|date:"M d, Y H:i" }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                            {% if movement.movement_type == 'IN' %}bg-green-100 text-green-800
+                                            {% elif movement.movement_type == 'OUT' %}bg-red-100 text-red-800
+                                            {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                            {{ movement.get_movement_type_display }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {{ movement.quantity }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-500">
+                                        {{ movement.notes|default:"-" }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ movement.created_by|default:"-" }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-history text-gray-400 text-2xl"></i>
+                    </div>
+                    <h4 class="text-lg font-medium text-gray-900 mb-2">No Stock Movements</h4>
+                    <p class="text-gray-500">This product hasn't had any stock movements yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Custom styles for better visual hierarchy */
+    .bg-gray-50 {
+        background-color: #f9fafb;
+    }
+    
+    .text-gray-500 {
+        color: #6b7280;
+    }
+    
+    .border-gray-200 {
+        border-color: #e5e7eb;
+    }
+</style>
+{% endblock %}

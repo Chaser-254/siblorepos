@@ -58,3 +58,31 @@ class CashierUpdateForm(forms.ModelForm):
         widgets = {
             'is_active': forms.CheckboxInput(),
         }
+
+class BusinessDetailsForm(forms.ModelForm):
+    """Form for shop admins to update their business details"""
+    class Meta:
+        model = UserProfile
+        fields = ('shop_name', 'shop_address', 'shop_city', 'shop_phone', 'shop_email')
+        widgets = {
+            'shop_name': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'Enter your business name'
+            }),
+            'shop_address': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'Enter your business address'
+            }),
+            'shop_city': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'Enter your city'
+            }),
+            'shop_phone': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'Enter your business phone'
+            }),
+            'shop_email': forms.EmailInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'Enter your business email'
+            }),
+        }

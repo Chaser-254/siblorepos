@@ -59,10 +59,19 @@ def product_detail(request, pk):
     stock = product.stock_records.first()
     movements = product.stock_movements.all()[:10]
     
+    # Calculate total stock value and profit per unit
+    total_stock_value = 0
+    profit_per_unit = 0
+    if stock:
+        total_stock_value = stock.quantity * product.selling_price
+        profit_per_unit = product.selling_price - product.cost_price
+    
     context = {
         'product': product,
         'stock': stock,
         'movements': movements,
+        'total_stock_value': total_stock_value,
+        'profit_per_unit': profit_per_unit,
     }
     return render(request, 'products/product_detail.html', context)
 
@@ -101,6 +110,55 @@ def product_delete(request, pk):
 def category_list(request):
     categories = Category.objects.annotate(product_count=Count('product'))
     return render(request, 'products/category_list.html', {'categories': categories})
+
+@login_required
+def category_detail(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    products = Product.objects.filter(category=category).select_related('category').prefetch_related('stock_records')
+    
+    # Search functionality
+    query = request.GET.get('q', '')
+    if query:
+        products = products.filter(
+            Q(name__icontains=query) | 
+            Q(sku__icontains=query) | 
+            Q(barcode__icontains=query) |
+            Q(description__icontains=query)
+        )
+    
+    # Filter by stock status
+    stock_filter = request.GET.get('stock')
+    if stock_filter == 'low':
+        products = [p for p in products if p.current_stock <= 10]
+    elif stock_filter == 'out':
+        products = [p for p in products if p.current_stock == 0]
+    
+    # Calculate statistics
+    total_products = products.count()
+    total_value = sum(p.selling_price * p.current_stock for p in products)
+    low_stock_count = sum(1 for p in products if p.current_stock <= 10)
+    out_of_stock_count = sum(1 for p in products if p.current_stock == 0)
+    
+    # Add calculated value to each product for template
+    for product in products:
+        product.total_value = product.selling_price * product.current_stock
+    
+    # Pagination
+    paginator = Paginator(products, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'category': category,
+        'page_obj': page_obj,
+        'query': query,
+        'stock_filter': stock_filter,
+        'total_products': total_products,
+        'total_value': total_value,
+        'low_stock_count': low_stock_count,
+        'out_of_stock_count': out_of_stock_count,
+    }
+    return render(request, 'products/category_detail.html', context)
 
 @can_manage_products
 def category_create(request):

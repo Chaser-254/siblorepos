@@ -270,7 +270,51 @@ def sale_detail(request, pk):
 @login_required
 def sale_receipt(request, pk):
     sale = get_object_or_404(Sale.objects.select_related('customer').prefetch_related('sale_items__product'), pk=pk)
-    return render(request, 'sales/receipt.html', {'sale': sale})
+    
+    # Get business information from the current user's profile or system defaults
+    business_info = {
+        'name': 'SibLore POS',
+        'address': '123 Business Street',
+        'city': 'Nairobi',
+        'phone': '+254 123 456 789',
+        'email': 'info@siblore.com',
+    }
+    
+    # Try to get business info from user profile if available
+    if request.user.is_authenticated and hasattr(request.user, 'profile'):
+        profile = request.user.profile
+        
+        # If current user is a cashier, get business info from their shop admin
+        if profile.is_cashier and profile.shop_admin:
+            admin_profile = profile.shop_admin
+            if admin_profile.shop_name:
+                business_info['name'] = admin_profile.shop_name
+            if admin_profile.shop_address:
+                business_info['address'] = admin_profile.shop_address
+            if admin_profile.shop_city:
+                business_info['city'] = admin_profile.shop_city
+            if admin_profile.shop_phone:
+                business_info['phone'] = admin_profile.shop_phone
+            if admin_profile.shop_email:
+                business_info['email'] = admin_profile.shop_email
+        else:
+            # For shop admins or site admins, use their own business info
+            if profile.shop_name:
+                business_info['name'] = profile.shop_name
+            if profile.shop_address:
+                business_info['address'] = profile.shop_address
+            if profile.shop_city:
+                business_info['city'] = profile.shop_city
+            if profile.shop_phone:
+                business_info['phone'] = profile.shop_phone
+            if profile.shop_email:
+                business_info['email'] = profile.shop_email
+    
+    context = {
+        'sale': sale,
+        'business': business_info,
+    }
+    return render(request, 'sales/receipt.html', context)
 
 @login_required
 def sale_delete(request, pk):
