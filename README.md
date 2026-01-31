@@ -202,20 +202,20 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - ✅ Registration request management
 
 ### Shop Administrator
-- ✅ Shop management and configuration
-- ✅ Product and supplier management
-- ✅ Cashier management
-- ✅ Sales reports and analytics
-- ✅ Debt and revenue tracking
-- ✅ E-commerce website management
-- ✅ Order processing
+- Shop management and configuration
+- Product and supplier management
+- Cashier management
+- Sales reports and analytics
+- Debt and revenue tracking
+- E-commerce website management
+- Order processing
 
 ### Cashier
-- ✅ POS terminal access
-- ✅ Sales processing
-- ✅ Customer management
-- ✅ Limited dashboard access
-- ✅ View own sales only
+- POS terminal access
+- Sales processing
+- Customer management
+- Limited dashboard access
+- View own sales only
 
 ## Reporting & Analytics
 
