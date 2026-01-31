@@ -246,6 +246,27 @@ def shop_admin_dashboard(request):
     # Recent activity
     recent_sales = Sale.objects.select_related('customer').order_by('-created_at')[:5]
     
+    # Website statistics
+    try:
+        from shop_website.models import ShopProfile, ShopProduct, Order
+        shop_profile = profile.shop_website
+        website_products = ShopProduct.objects.filter(shop_profile=shop_profile).count()
+        website_orders = Order.objects.filter(shop_profile=shop_profile).count()
+        recent_website_orders = Order.objects.filter(shop_profile=shop_profile).order_by('-created_at')[:5]
+        
+        # Calculate website revenue
+        website_revenue = Order.objects.filter(
+            shop_profile=shop_profile,
+            order_status__in=['CONFIRMED', 'PREPARING', 'READY', 'COMPLETED']
+        ).aggregate(total=Sum('total_amount'))['total'] or 0
+        
+    except:
+        shop_profile = None
+        website_products = 0
+        website_orders = 0
+        website_revenue = 0
+        recent_website_orders = []
+    
     context = {
         'today_sales_total': today_sales['total'] or 0,
         'today_sales_count': today_sales['count'] or 0,
@@ -257,6 +278,12 @@ def shop_admin_dashboard(request):
         'cashiers': cashiers,
         'pending_requests': pending_requests,
         'recent_sales': recent_sales,
+        # Website data
+        'shop_profile': shop_profile,
+        'website_products': website_products,
+        'website_orders': website_orders,
+        'website_revenue': website_revenue,
+        'recent_website_orders': recent_website_orders,
     }
     
     return render(request, 'users/shop_admin_dashboard.html', context)

@@ -1,0 +1,201 @@
+{% extends 'shop_website/base.html' %}
+
+{% block title %}Shopping Cart - {{ shop_profile.business_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Shopping Cart</h1>
+    
+    {% if cart and not cart.is_empty %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Cart Items ({{ cart.total_items }})</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in cart.items.all %}
+                    <div class="row align-items-center mb-3 pb-3 border-bottom" id="cart-item-{{ item.id }}">
+                        <div class="col-md-2">
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="img-fluid rounded">
+                        </div>
+                        <div class="col-md-4">
+                            <h6>{{ item.product.name }}</h6>
+                            <small class="text-muted">{{ item.product.category }}</small>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="input-group input-group-sm">
+                                <button class="btn btn-outline-secondary" type="button" onclick="updateQuantity({{ item.id }}, {{ item.quantity }} - 1)">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" class="form-control text-center" value="{{ item.quantity }}" id="quantity-{{ item.id }}" min="1" max="{{ item.product.stock_quantity }}" readonly>
+                                <button class="btn btn-outline-secondary" type="button" onclick="updateQuantity({{ item.id }}, {{ item.quantity }} + 1)">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <strong>KES {{ item.subtotal }}</strong>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeItem({{ item.id }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in cart.items.all %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <strong>{{ item.quantity }}x {{ item.product.name }}</strong>
+                            <br>
+                            <small class="text-muted">KES {{ item.product.price }} each</small>
+                        </div>
+                        <strong>KES {{ item.subtotal }}</strong>
+                    </div>
+                    {% endfor %}
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <h5>Total:</h5>
+                        <h5 class="text-primary">KES {{ cart.total_price }}</h5>
+                    </div>
+                    <a href="{% url 'shop_website:checkout' shop_profile.user_profile.user.username %}" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
+                    </a>
+                    <a href="{% url 'shop_website:shop_products' shop_profile.user_profile.user.username %}" class="btn btn-outline-secondary w-100 mt-2">
+                        <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+        <h3>Your cart is empty</h3>
+        <p class="text-muted">Looks like you haven't added any products to your cart yet.</p>
+        <a href="{% url 'shop_website:shop_products' shop_profile.user_profile.user.username %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-shopping-bag me-2"></i>Start Shopping
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function updateQuantity(itemId, newQuantity) {
+    if (newQuantity < 1) return;
+    
+    const formData = new FormData();
+    formData.append('quantity', newQuantity);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    fetch(`{% url 'shop_website:update_cart' shop_profile.user_profile.user.username 0 %}`.replace('0', itemId), {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update quantity input
+            document.getElementById(`quantity-${itemId}`).value = newQuantity;
+            
+            // Update cart badge
+            const cartBadge = document.querySelector('.cart-badge');
+            if (cartBadge) {
+                cartBadge.textContent = data.cart_items_count;
+                if (data.cart_items_count === 0) {
+                    cartBadge.style.display = 'none';
+                }
+            }
+            
+            // Update item subtotal
+            const itemRow = document.getElementById(`cart-item-${itemId}`);
+            const subtotalCell = itemRow.querySelector('.col-md-4:nth-child(4) strong');
+            subtotalCell.textContent = `KES ${data.item_subtotal}`;
+            
+            // Update cart total
+            const totalElements = document.querySelectorAll('.text-primary');
+            totalElements.forEach(el => {
+                if (el.textContent.includes('KES')) {
+                    el.textContent = `KES ${data.cart_total}`;
+                }
+            });
+            
+            // Remove item if quantity is 0
+            if (newQuantity === 0) {
+                itemRow.remove();
+                if (data.cart_items_count === 0) {
+                    location.reload();
+                }
+            }
+        } else {
+            alert(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+}
+
+function removeItem(itemId) {
+    if (!confirm('Are you sure you want to remove this item from your cart?')) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    fetch(`{% url 'shop_website:remove_from_cart' shop_profile.user_profile.user.username 0 %}`.replace('0', itemId), {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove item from DOM
+            const itemRow = document.getElementById(`cart-item-${itemId}`);
+            itemRow.remove();
+            
+            // Update cart badge
+            const cartBadge = document.querySelector('.cart-badge');
+            if (cartBadge) {
+                cartBadge.textContent = data.cart_items_count;
+                if (data.cart_items_count === 0) {
+                    cartBadge.style.display = 'none';
+                }
+            }
+            
+            // Update cart total
+            const totalElements = document.querySelectorAll('.text-primary');
+            totalElements.forEach(el => {
+                if (el.textContent.includes('KES')) {
+                    el.textContent = `KES ${data.cart_total}`;
+                }
+            });
+            
+            // Reload if cart is empty
+            if (data.cart_items_count === 0) {
+                location.reload();
+            }
+        } else {
+            alert(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+}
+</script>
+{% endblock %}

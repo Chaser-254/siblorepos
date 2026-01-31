@@ -7,9 +7,14 @@
     <div class="flex justify-between items-center">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">Shop Admin Dashboard</h1>
-            <p class="text-gray-600 mt-2">Shop operations and staff management</p>
+            <p class="text-gray-600 mt-2">Shop operations, staff management, and online store</p>
         </div>
         <div class="flex space-x-3">
+            {% if shop_profile %}
+            <a href="{% url 'shop_website:shop_home' shop_profile.user_profile.user.username %}" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                <i class="fas fa-external-link-alt mr-2"></i>View Website
+            </a>
+            {% endif %}
             <a href="{% url 'users:registration_requests' %}" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
                 <i class="fas fa-user-check mr-2"></i>
                 {% if pending_requests > 0 %}
@@ -25,7 +30,7 @@
 </div>
 
 <!-- Shop Stats Cards -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
     <!-- Today's Sales -->
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
@@ -54,16 +59,30 @@
         </div>
     </div>
 
-    <!-- Outstanding Debts -->
+    <!-- Website Orders -->
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
-            <div class="p-3 bg-red-100 rounded-lg">
-                <i class="fas fa-hand-holding-usd text-red-600 text-xl"></i>
+            <div class="p-3 bg-purple-100 rounded-lg">
+                <i class="fas fa-shopping-cart text-purple-600 text-xl"></i>
             </div>
             <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Outstanding Debts</p>
-                <p class="text-2xl font-bold text-gray-900">KES {{ outstanding_debts|floatformat:2 }}</p>
-                <p class="text-xs text-gray-500">Total: KES {{ total_debts|floatformat:2 }}</p>
+                <p class="text-sm font-medium text-gray-600">Website Orders</p>
+                <p class="text-2xl font-bold text-gray-900">{{ website_orders }}</p>
+                <p class="text-xs text-gray-500">Online sales</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Website Revenue -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 bg-indigo-100 rounded-lg">
+                <i class="fas fa-globe text-indigo-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Website Revenue</p>
+                <p class="text-2xl font-bold text-gray-900">KES {{ website_revenue|floatformat:2 }}</p>
+                <p class="text-xs text-gray-500">Online earnings</p>
             </div>
         </div>
     </div>
@@ -71,8 +90,8 @@
     <!-- Staff Count -->
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
-            <div class="p-3 bg-purple-100 rounded-lg">
-                <i class="fas fa-users-cog text-purple-600 text-xl"></i>
+            <div class="p-3 bg-yellow-100 rounded-lg">
+                <i class="fas fa-users-cog text-yellow-600 text-xl"></i>
             </div>
             <div class="ml-4">
                 <p class="text-sm font-medium text-gray-600">Active Cashiers</p>
@@ -83,8 +102,64 @@
     </div>
 </div>
 
-<!-- Shop Management Sections -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+<!-- Management Sections -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+    <!-- Website Management -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">Website Management</h2>
+            {% if shop_profile %}
+            <span class="text-green-600 text-sm font-medium">
+                <i class="fas fa-circle text-green-500 mr-1"></i>Active
+            </span>
+            {% else %}
+            <span class="text-gray-400 text-sm font-medium">
+                <i class="fas fa-circle text-gray-400 mr-1"></i>Not Setup
+            </span>
+            {% endif %}
+        </div>
+        <div class="space-y-3">
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <div class="flex items-center">
+                    <i class="fas fa-box text-gray-600 mr-3"></i>
+                    <span class="text-sm font-medium text-gray-700">Website Products</span>
+                </div>
+                <span class="text-lg font-bold text-blue-600">{{ website_products }}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <div class="flex items-center">
+                    <i class="fas fa-shopping-bag text-gray-600 mr-3"></i>
+                    <span class="text-sm font-medium text-gray-700">Online Orders</span>
+                </div>
+                <span class="text-lg font-bold text-purple-600">{{ website_orders }}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <div class="flex items-center">
+                    <i class="fas fa-dollar-sign text-gray-600 mr-3"></i>
+                    <span class="text-sm font-medium text-gray-700">Website Revenue</span>
+                </div>
+                <span class="text-lg font-bold text-green-600">KES {{ website_revenue|floatformat:2 }}</span>
+            </div>
+        </div>
+        <div class="mt-4 space-y-2">
+            {% if shop_profile %}
+            <a href="{% url 'shop_website:edit_website' %}" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-center block">
+                <i class="fas fa-cog mr-2"></i>Website Settings
+            </a>
+            <a href="{% url 'shop_website:add_product' %}" class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-center block">
+                <i class="fas fa-plus mr-2"></i>Add Products
+            </a>
+            <a href="{% url 'shop_website:manage_orders' %}" class="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors text-center block">
+                <i class="fas fa-list mr-2"></i>Manage Orders
+            </a>
+            {% else %}
+            <a href="{% url 'shop_website:setup_website' %}" class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-center block">
+                <i class="fas fa-plus mr-2"></i>Setup Website
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
     <!-- Staff Management -->
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex justify-between items-center mb-4">
@@ -234,6 +309,32 @@
                 <p class="text-sm text-gray-600">View analytics</p>
             </div>
         </a>
+        
+        {% if shop_profile %}
+        <a href="{% url 'shop_website:manage_products' %}" class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+            <i class="fas fa-shopping-bag text-purple-600 text-xl mr-3"></i>
+            <div>
+                <p class="font-medium text-gray-900">Website Products</p>
+                <p class="text-sm text-gray-600">Manage online store</p>
+            </div>
+        </a>
+        
+        <a href="{% url 'shop_website:shop_home' shop_profile.user_profile.user.username %}" target="_blank" class="flex items-center p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
+            <i class="fas fa-external-link-alt text-indigo-600 text-xl mr-3"></i>
+            <div>
+                <p class="font-medium text-gray-900">View Website</p>
+                <p class="text-sm text-gray-600">Public storefront</p>
+            </div>
+        </a>
+        {% else %}
+        <a href="{% url 'shop_website:setup_website' %}" class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+            <i class="fas fa-plus text-purple-600 text-xl mr-3"></i>
+            <div>
+                <p class="font-medium text-gray-900">Setup Website</p>
+                <p class="text-sm text-gray-600">Create online store</p>
+            </div>
+        </a>
+        {% endif %}
         
         <a href="{% url 'sales:pos_terminal' %}" class="flex items-center p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors">
             <i class="fas fa-cash-register text-yellow-600 text-xl mr-3"></i>
