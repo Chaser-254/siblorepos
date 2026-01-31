@@ -72,3 +72,53 @@ def can_manage_users(view_func):
             return redirect('sales:dashboard')
         return view_func(request, *args, **kwargs)
     return _wrapped_view
+
+def cashier_required(view_func):
+    """Decorator to restrict access to cashiers only"""
+    @wraps(view_func)
+    @login_required
+    def _wrapped_view(request, *args, **kwargs):
+        profile = get_user_profile(request.user)
+        if not profile.is_cashier:
+            messages.error(request, 'Access denied. This page is for cashiers only.')
+            return redirect('sales:dashboard')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+def shop_admin_required(view_func):
+    """Decorator to restrict access to shop admins only"""
+    @wraps(view_func)
+    @login_required
+    def _wrapped_view(request, *args, **kwargs):
+        profile = get_user_profile(request.user)
+        if not profile.is_shop_admin:
+            messages.error(request, 'Access denied. This page is for shop administrators only.')
+            return redirect('sales:dashboard')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+def site_admin_required(view_func):
+    """Decorator to restrict access to site admins only"""
+    @wraps(view_func)
+    @login_required
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            messages.error(request, 'Access denied. This page is for site administrators only.')
+            return redirect('sales:dashboard')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+def restrict_cashier_access(view_func):
+    """Decorator to prevent cashiers from accessing certain pages"""
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return view_func(request, *args, **kwargs)
+        
+        profile = get_user_profile(request.user)
+        if profile.is_cashier:
+            messages.error(request, 'Access denied. Cashiers cannot access this page.')
+            return redirect('users:cashier_dashboard')
+        
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view

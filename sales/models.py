@@ -12,6 +12,7 @@ class Customer(models.Model):
     address = models.TextField(blank=True)
     credit_limit = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     is_active = models.BooleanField(default=True)
+    shop_admin = models.ForeignKey(UserProfile, on_delete=models.CASCADE, limit_choices_to={'role': 'SHOP_ADMIN'}, related_name='customers', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -55,7 +56,7 @@ class Sale(models.Model):
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     change_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     notes = models.TextField(blank=True)
-    shop_admin = models.ForeignKey(UserProfile, on_delete=models.CASCADE, limit_choices_to={'role': 'SHOP_ADMIN'}, related_name='sales')
+    shop_admin = models.ForeignKey(UserProfile, on_delete=models.CASCADE, limit_choices_to={'role': 'SHOP_ADMIN'}, related_name='sales', null=True, blank=True)
     created_by = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}Customer Details - {{ customer.name }} - SibLore POS{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Customer Details</h1>
+            <p class="text-gray-600 mt-2">View complete customer information and history</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'sales:customer_edit' customer.pk %}" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                <i class="fas fa-edit mr-2"></i>Edit Customer
+            </a>
+            <a href="{% url 'sales:customers_list' %}" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Information -->
+<div class="bg-white rounded-lg shadow mb-6">
+    <div class="p-6">
+        <div class="flex items-center mb-6">
+            <div class="bg-blue-100 rounded-full p-4 mr-4">
+                <i class="fas fa-user text-blue-600 text-2xl"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">{{ customer.name }}</h2>
+                <div class="flex items-center mt-1">
+                    {% if customer.is_active %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <i class="fas fa-check-circle mr-1"></i>Active
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            <i class="fas fa-ban mr-1"></i>Inactive
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+                <h3 class="text-sm font-medium text-gray-500 mb-1">Phone Number</h3>
+                <p class="text-gray-900">{{ customer.phone|default:"Not provided" }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-500 mb-1">Email Address</h3>
+                <p class="text-gray-900">{{ customer.email|default:"Not provided" }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-500 mb-1">Credit Limit</h3>
+                <p class="text-gray-900">{{ currency_symbol }}{{ customer.credit_limit|floatformat:2 }}</p>
+            </div>
+            <div class="lg:col-span-3">
+                <h3 class="text-sm font-medium text-gray-500 mb-1">Address</h3>
+                <p class="text-gray-900">{{ customer.address|default:"Not provided" }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-500 mb-1">Total Debt</h3>
+                <p class="text-gray-900 {% if customer.total_debt > 0 %}text-red-600{% endif %}">{{ currency_symbol }}{{ customer.total_debt|floatformat:2 }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-500 mb-1">Available Credit</h3>
+                <p class="text-gray-900 {% if customer.available_credit > 0 %}text-green-600{% else %}text-red-600{% endif %}">{{ currency_symbol }}{{ customer.available_credit|floatformat:2 }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-500 mb-1">Customer Since</h3>
+                <p class="text-gray-900">{{ customer.created_at|date:"M d, Y" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                <i class="fas fa-shopping-cart text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Total Sales</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ currency_symbol }}{{ total_sales|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-red-100 text-red-600">
+                <i class="fas fa-hand-holding-usd text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Total Debt</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ currency_symbol }}{{ total_debt|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-green-100 text-green-600">
+                <i class="fas fa-receipt text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Sales Count</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ customer_sales.count }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sales -->
+<div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Recent Sales</h3>
+    </div>
+    <div class="p-6">
+        {% if customer_sales %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice #</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for sale in customer_sales %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ sale.invoice_number }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ sale.created_at|date:"M d, Y H:i" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ sale.get_payment_method_display }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ currency_symbol }}{{ sale.total_amount|floatformat:2 }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                    {% if sale.status == 'COMPLETED' %}bg-green-100 text-green-800
+                                    {% elif sale.status == 'PENDING' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ sale.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="{% url 'sales:sale_detail' sale.pk %}" class="text-blue-600 hover:text-blue-900">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if customer_sales.count >= 10 %}
+            <div class="mt-4 text-center">
+                <a href="{% url 'sales:sales_list' %}?customer={{ customer.pk }}" class="text-blue-600 hover:text-blue-900">View All Sales</a>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-shopping-cart fa-3x text-gray-300 mb-3"></i>
+                <p class="text-gray-500">No sales found for this customer</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Outstanding Debts -->
+<div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Outstanding Debts</h3>
+    </div>
+    <div class="p-6">
+        {% if customer_debts %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for debt in customer_debts %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <a href="{% url 'sales:sale_detail' debt.sale.pk %}" class="hover:text-blue-600">
+                                    {{ debt.sale.invoice_number }}
+                                </a>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ currency_symbol }}{{ debt.amount|floatformat:2 }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ currency_symbol }}{{ debt.amount_paid|floatformat:2 }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {% if debt.balance > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                                {{ currency_symbol }}{{ debt.balance|floatformat:2 }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ debt.due_date|date:"M d, Y" }}
+                                {% if debt.status == 'OVERDUE' %}
+                                    <span class="text-xs text-red-600 block">Overdue</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                    {% if debt.status == 'PAID' %}bg-green-100 text-green-800
+                                    {% elif debt.status == 'OVERDUE' %}bg-red-100 text-red-800
+                                    {% elif debt.status == 'PARTIAL' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ debt.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                {% if debt.balance > 0 %}
+                                    <a href="{% url 'sales:pay_debt' debt.pk %}" class="text-blue-600 hover:text-blue-900">Pay</a>
+                                {% endif %}
+                                <a href="{% url 'sales:sale_detail' debt.sale.pk %}" class="text-gray-600 hover:text-gray-900 ml-3">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-hand-holding-usd fa-3x text-gray-300 mb-3"></i>
+                <p class="text-gray-500">No outstanding debts for this customer</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

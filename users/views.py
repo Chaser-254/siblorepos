@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Sum, Count, F
 from django.utils import timezone
+from django.http import JsonResponse
 from .models import UserProfile, RegistrationRequest
 from .forms import UserCreationForm, UserUpdateForm, CashierCreationForm, CashierUpdateForm, BusinessDetailsForm
 from .decorators import get_user_profile
@@ -23,6 +24,8 @@ def login_view(request):
             return redirect('users:site_owner_dashboard')
         elif request.user.profile.is_shop_admin:
             return redirect('users:shop_admin_dashboard')
+        elif request.user.profile.is_cashier:
+            return redirect('users:cashier_dashboard')
         else:
             return redirect('sales:dashboard')
     
@@ -43,6 +46,8 @@ def login_view(request):
                     return redirect('users:site_owner_dashboard')
                 elif user.profile.is_shop_admin:
                     return redirect('users:shop_admin_dashboard')
+                elif user.profile.is_cashier:
+                    return redirect('users:cashier_dashboard')
                 else:
                     return redirect('sales:dashboard')
             else:
@@ -223,28 +228,47 @@ def shop_admin_dashboard(request):
     from products.models import Product, Stock
     from users.models import UserProfile, RegistrationRequest
     
-    # Sales statistics
-    today_sales = Sale.objects.filter(created_at__date=timezone.now().date()).aggregate(
+    # Sales statistics - filtered by shop
+    today_sales = Sale.objects.filter(
+        created_at__date=timezone.now().date(),
+        shop_admin=profile
+    ).aggregate(
         total=Sum('total_amount'),
         count=Count('id')
     )
     
-    # Customer statistics
-    total_customers = Customer.objects.count()
-    total_debts = Debt.objects.aggregate(total=Sum('amount'))['total'] or 0
-    paid_debts = Debt.objects.filter(status='PAID').aggregate(total=Sum('amount'))['total'] or 0
+    # Customer statistics - filtered by shop
+    total_customers = Customer.objects.filter(
+        sale__shop_admin=profile
+    ).distinct().count()
+    total_debts = Debt.objects.filter(
+        sale__shop_admin=profile
+    ).aggregate(total=Sum('amount'))['total'] or 0
+    paid_debts = Debt.objects.filter(
+        sale__shop_admin=profile,
+        status='PAID'
+    ).aggregate(total=Sum('amount'))['total'] or 0
     outstanding_debts = total_debts - paid_debts
     
-    # Product statistics
-    total_products = Product.objects.count()
-    low_stock_products = Stock.objects.filter(quantity__lte=F('reorder_level')).count()
+    # Product statistics - filtered by shop
+    total_products = Product.objects.filter(shop_admin=profile).count()
+    low_stock_products = Stock.objects.filter(
+        product__shop_admin=profile,
+        quantity__lte=F('reorder_level')
+    ).count()
     
-    # Staff statistics
-    cashiers = UserProfile.objects.filter(role='CASHIER', is_active=True).count()
+    # Staff statistics - filtered by shop
+    cashiers = UserProfile.objects.filter(
+        shop_admin=profile,
+        role='CASHIER',
+        is_active=True
+    ).count()
     pending_requests = RegistrationRequest.objects.filter(status='PENDING').count()
     
-    # Recent activity
-    recent_sales = Sale.objects.select_related('customer').order_by('-created_at')[:5]
+    # Recent activity - filtered by shop
+    recent_sales = Sale.objects.filter(
+        shop_admin=profile
+    ).select_related('customer').order_by('-created_at')[:5]
     
     # Website statistics
     try:
@@ -284,6 +308,8 @@ def shop_admin_dashboard(request):
         'website_orders': website_orders,
         'website_revenue': website_revenue,
         'recent_website_orders': recent_website_orders,
+        'currency': 'KES',
+        'currency_symbol': 'KSh',
     }
     
     return render(request, 'users/shop_admin_dashboard.html', context)
@@ -345,6 +371,10 @@ def site_owner_dashboard(request):
         'recent_sales': recent_sales,
         'recent_users': recent_users,
         'recent_requests': recent_requests,
+        
+        # Currency
+        'currency': 'KES',
+        'currency_symbol': 'KSh',
     }
     
     return render(request, 'users/site_owner_dashboard.html', context)
@@ -566,6 +596,208 @@ def user_update(request, pk):
         })
     
     return render(request, 'users/user_form.html', {'form': form, 'title': 'Update User', 'user': user})
+
+@login_required
+def cashier_dashboard(request):
+    """Cashier Dashboard - for cashiers to view website and process orders"""
+    profile = get_user_profile(request.user)
+    if not profile.is_cashier:
+        messages.error(request, 'Access denied. This dashboard is for cashiers only.')
+        return redirect('sales:dashboard')
+    
+    # Get shop admin's website and orders
+    shop_admin = profile.shop_admin
+    if not shop_admin:
+        messages.error(request, 'Your account is not assigned to any shop administrator.')
+        return redirect('sales:dashboard')
+    
+    # Get website information and orders
+    try:
+        from shop_website.models import ShopProfile, Order
+        shop_profile = shop_admin.shop_website
+        website_orders = Order.objects.filter(shop_profile=shop_profile).order_by('-created_at')
+        pending_orders = website_orders.filter(order_status='PENDING')
+        confirmed_orders = website_orders.filter(order_status='CONFIRMED')
+        preparing_orders = website_orders.filter(order_status='PREPARING')
+        ready_orders = website_orders.filter(order_status='READY')
+        completed_orders = website_orders.filter(order_status='COMPLETED')
+        
+        # Calculate statistics
+        total_orders = website_orders.count()
+        pending_count = pending_orders.count()
+        confirmed_count = confirmed_orders.count()
+        preparing_count = preparing_orders.count()
+        ready_count = ready_orders.count()
+        completed_count = completed_orders.count()
+        
+        # Recent orders for display
+        recent_orders = website_orders[:10]
+        
+        # Website URL
+        website_url = shop_profile.shop_url
+        
+    except:
+        shop_profile = None
+        website_orders = []
+        pending_orders = []
+        confirmed_orders = []
+        preparing_orders = []
+        ready_orders = []
+        completed_orders = []
+        total_orders = 0
+        pending_count = 0
+        confirmed_count = 0
+        preparing_count = 0
+        ready_count = 0
+        completed_count = 0
+        recent_orders = []
+        website_url = '#'
+    
+    context = {
+        'shop_profile': shop_profile,
+        'shop_admin': shop_admin,
+        'website_url': website_url,
+        'total_orders': total_orders,
+        'pending_count': pending_count,
+        'confirmed_count': confirmed_count,
+        'preparing_count': preparing_count,
+        'ready_count': ready_count,
+        'completed_count': completed_count,
+        'recent_orders': recent_orders,
+        'currency': 'KES',
+        'currency_symbol': 'KSh',
+    }
+    
+    return render(request, 'users/cashier_dashboard.html', context)
+
+@login_required
+def cashier_orders(request):
+    """View for cashiers to see and process website orders"""
+    profile = get_user_profile(request.user)
+    if not profile.is_cashier:
+        messages.error(request, 'Access denied. This page is for cashiers only.')
+        return redirect('sales:dashboard')
+    
+    # Get shop admin's website and orders
+    shop_admin = profile.shop_admin
+    if not shop_admin:
+        messages.error(request, 'Your account is not assigned to any shop administrator.')
+        return redirect('sales:dashboard')
+    
+    # Get status filter before the try block
+    status_filter = request.GET.get('status')
+    
+    try:
+        from shop_website.models import ShopProfile, Order
+        shop_profile = shop_admin.shop_website
+        orders = Order.objects.filter(shop_profile=shop_profile).order_by('-created_at')
+        
+        # Filter by status if provided
+        if status_filter:
+            orders = orders.filter(order_status=status_filter)
+        
+    except:
+        orders = []
+    
+    context = {
+        'orders': orders,
+        'status_choices': [
+            ('PENDING', 'Pending'),
+            ('CONFIRMED', 'Confirmed'),
+            ('PREPARING', 'Preparing'),
+            ('READY', 'Ready for Pickup/Delivery'),
+            ('COMPLETED', 'Completed'),
+            ('CANCELLED', 'Cancelled'),
+        ],
+        'current_status': status_filter,
+    }
+    
+    return render(request, 'users/cashier_orders.html', context)
+
+@login_required
+def cashier_update_order_status(request, pk):
+    """Update order status for cashiers"""
+    profile = get_user_profile(request.user)
+    if not profile.is_cashier:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Access denied'})
+        messages.error(request, 'Access denied. This action is for cashiers only.')
+        return redirect('sales:dashboard')
+    
+    # Get shop admin's website
+    shop_admin = profile.shop_admin
+    if not shop_admin:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Your account is not assigned to any shop administrator'})
+        messages.error(request, 'Your account is not assigned to any shop administrator.')
+        return redirect('sales:dashboard')
+    
+    try:
+        from shop_website.models import ShopProfile, Order
+        shop_profile = shop_admin.shop_website
+        order = get_object_or_404(Order, pk=pk, shop_profile=shop_profile)
+        
+        if request.method == 'POST':
+            new_status = request.POST.get('status')
+            valid_statuses = [choice[0] for choice in Order.ORDER_STATUS_CHOICES]
+            
+            if new_status in valid_statuses:
+                old_status = order.order_status
+                order.order_status = new_status
+                order.save()
+                
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True, 
+                        'message': f'Order {order.order_number} status updated from {old_status} to {new_status}.',
+                        'old_status': old_status,
+                        'new_status': new_status
+                    })
+                
+                messages.success(request, 
+                    f'Order {order.order_number} status updated from {old_status} to {new_status}.')
+            else:
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'error': 'Invalid status selected'})
+                messages.error(request, 'Invalid status selected.')
+        
+        return redirect('users:cashier_orders')
+        
+    except:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Order not found or access denied'})
+        messages.error(request, 'Order not found or access denied.')
+        return redirect('users:cashier_orders')
+
+@login_required
+def cashier_order_detail(request, pk):
+    """View order details for cashiers"""
+    profile = get_user_profile(request.user)
+    if not profile.is_cashier:
+        messages.error(request, 'Access denied. This page is for cashiers only.')
+        return redirect('sales:dashboard')
+    
+    # Get shop admin's website
+    shop_admin = profile.shop_admin
+    if not shop_admin:
+        messages.error(request, 'Your account is not assigned to any shop administrator.')
+        return redirect('sales:dashboard')
+    
+    try:
+        from shop_website.models import ShopProfile, Order
+        shop_profile = shop_admin.shop_website
+        order = get_object_or_404(Order, pk=pk, shop_profile=shop_profile)
+        
+        context = {
+            'order': order,
+            'status_choices': Order.ORDER_STATUS_CHOICES,
+        }
+        
+        return render(request, 'users/cashier_order_detail.html', context)
+        
+    except:
+        messages.error(request, 'Order not found or access denied.')
+        return redirect('users:cashier_orders')
 
 def user_toggle_active(request, pk):
     if not request.user.is_authenticated:

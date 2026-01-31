@@ -6,6 +6,7 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 
 ### Point of Sale (POS) System
 - **Multi-role User Management**: Site Admin, Shop Admin, and Cashier roles with granular permissions
+- **Shop Data Isolation**: Each shop admin sees only their own products and sales, ensuring complete data privacy
 - **Product Management**: Complete inventory control with categories, stock tracking, and barcode support
 - **Sales Processing**: Real-time POS terminal with multiple payment methods (Cash, Card, Mobile Money, Bank Transfer, Credit)
 - **Customer Management**: Customer database with credit limits and debt tracking
@@ -23,12 +24,13 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 
 ### User Management & Authentication
 - **Role-Based Access Control**:
-  - **Site Admin**: Full system access, user management, registration approval
-  - **Shop Admin**: Shop management, product/supplier control, cashier management
-  - **Cashier**: POS access, sales processing, limited dashboard access
+  - **Site Admin**: Full system access, user management, registration approval, can view all shops
+  - **Shop Admin**: Shop management, product/supplier control, cashier management, sees only their own data
+  - **Cashier**: POS access, sales processing, limited dashboard access, sees only their own sales within their shop
 - **Registration System**: Request-based registration with admin approval workflow
 - **Custom Authentication**: Enhanced authentication backend with profile-based access control
 - **Business Profiles**: Extended user profiles with business information
+- **Data Isolation**: Complete separation of data between different shops - shop admins cannot see other shops' products or sales
 
 ### Inventory & Product Management
 - **Product Categories**: Hierarchical category system
@@ -76,13 +78,13 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 
 #### Product Management Models
 - **`Category`**: Product categorization system
-- **`Product`**: Core product information with pricing and images
+- **`Product`**: Core product information with pricing, images, and shop assignment
 - **`Stock`**: Real-time inventory tracking with reorder levels
 - **`StockMovement`**: Complete audit trail of stock transactions
 
 #### Sales & Financial Models
 - **`Customer`**: Customer database with credit management
-- **`Sale`**: Sales transactions with comprehensive payment tracking
+- **`Sale`**: Sales transactions with comprehensive payment tracking and shop assignment
 - **`SaleItem`**: Individual line items in sales transactions
 - **`Debt`**: Customer debt tracking with payment schedules
 - **`DebtPayment`**: Debt payment records and history
@@ -200,22 +202,25 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 - View all shops and reports
 - System configuration
 - Registration request management
+- Can access all products and sales across all shops
 
 ### Shop Administrator
 - Shop management and configuration
-- Product and supplier management
+- Product and supplier management (own shop only)
 - Cashier management
-- Sales reports and analytics
-- Debt and revenue tracking
+- Sales reports and analytics (own shop only)
+- Debt and revenue tracking (own shop only)
 - E-commerce website management
 - Order processing
+- **Data Isolation**: Can only see products and sales from their own shop
 
 ### Cashier
-- POS terminal access
-- Sales processing
+- POS terminal access (shop products only)
+- Sales processing (within assigned shop)
 - Customer management
 - Limited dashboard access
-- View own sales only
+- View own sales only (within their shop)
+- **Data Isolation**: Can only see products from their assigned shop and their own sales
 
 ## Reporting & Analytics
 
@@ -280,15 +285,22 @@ A comprehensive Django-based Point of Sale (POS) system with integrated e-commer
 
 ### Multi-Shop Support
 - Each shop admin gets independent website
-- Separate product catalogs
+- Separate product catalogs with complete data isolation
 - Independent order management
 - Custom branding per shop
+- **Shop Data Privacy**: Shop admins cannot access other shops' data
 
 ### Integration Capabilities
 - Barcode scanning support
 - Multiple payment gateways
 - Email notifications
 - Print receipts and invoices
+
+### Security & Access Control
+- Complete data isolation between shops
+- Role-based access control with shop-specific filtering
+- Secure authentication and authorization
+- Shop-specific product and sales visibility
 
 ## Deployment Considerations
 
@@ -340,6 +352,10 @@ For support and questions:
 - **v1.1.0**: Added e-commerce website integration
 - **v1.2.0**: Enhanced reporting and analytics
 - **v1.3.0**: Multi-shop support and customization
+- **v1.4.0**: Shop data isolation and security enhancements
+  - Complete separation of products and sales between shops
+  - Shop admin access control improvements
+  - Enhanced security for multi-shop environments
 
 ---
 

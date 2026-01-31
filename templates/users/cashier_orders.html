@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Orders Management - Cashier{% endblock %}
+
+{% block extra_css %}
+<style>
+.order-card {
+    transition: transform 0.2s;
+    border-left: 4px solid #007bff;
+}
+.order-card:hover {
+    transform: translateY(-2px);
+}
+.status-pending { border-left-color: #ffc107; }
+.status-confirmed { border-left-color: #17a2b8; }
+.status-preparing { border-left-color: #6f42c1; }
+.status-ready { border-left-color: #28a745; }
+.status-completed { border-left-color: #6c757d; }
+.status-cancelled { border-left-color: #dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <div>
+            <h1 class="h2">Orders Management</h1>
+            <p class="text-muted">Process and manage customer orders</p>
+        </div>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <a href="{% url 'users:cashier_dashboard' %}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <label for="status" class="form-label">Filter by Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Orders</option>
+                        {% for status_value, status_label in status_choices %}
+                            <option value="{{ status_value }}" {% if current_status == status_value %}selected{% endif %}>
+                                {{ status_label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                    {% if current_status %}
+                        <a href="{% url 'users:cashier_orders' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Orders List -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                Orders 
+                {% if current_status %}
+                    - {{ current_status|title }}
+                {% endif %}
+                ({{ orders|length }})
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if orders %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Order Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr class="order-card status-{{ order.order_status|lower }}">
+                                <td>
+                                    <strong>{{ order.order_number }}</strong>
+                                    {% if order.notes %}
+                                        <i class="fas fa-sticky-note text-warning" title="{{ order.notes }}"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div>{{ order.customer_name }}</div>
+                                    {% if order.delivery_address %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-map-marker-alt"></i> Delivery
+                                        </small>
+                                    {% else %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-store"></i> Pickup
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div>{{ order.customer_phone }}</div>
+                                    <small class="text-muted">{{ order.customer_email }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if order.order_status == 'PENDING' %}warning{% elif order.order_status == 'CONFIRMED' %}info{% elif order.order_status == 'PREPARING' %}primary{% elif order.order_status == 'READY' %}success{% elif order.order_status == 'COMPLETED' %}secondary{% else %}danger{% endif %}">
+                                        {{ order.get_order_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {{ order.items.count }} items
+                                </td>
+                                <td>
+                                    <strong>KSh {{ order.total_amount }}</strong>
+                                    {% if order.delivery_fee > 0 %}
+                                        <br><small class="text-muted">+ KSh {{ order.delivery_fee }} delivery</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div>{{ order.created_at|date:"M d, Y" }}</div>
+                                    <small class="text-muted">{{ order.created_at|time:"H:i" }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'users:cashier_order_detail' order.pk %}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if order.order_status != 'COMPLETED' and order.order_status != 'CANCELLED' %}
+                                            <form method="post" action="{% url 'users:cashier_update_order_status' order.pk %}" style="display: inline;">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="status" value="{% if order.order_status == 'PENDING' %}CONFIRMED{% elif order.order_status == 'CONFIRMED' %}PREPARING{% elif order.order_status == 'PREPARING' %}READY{% elif order.order_status == 'READY' %}COMPLETED{% endif %}">
+                                                <button type="submit" class="btn btn-sm btn-success" 
+                                                        title="Mark as {% if order.order_status == 'PENDING' %}Confirmed{% elif order.order_status == 'CONFIRMED' %}Preparing{% elif order.order_status == 'PREPARING' %}Ready{% elif order.order_status == 'READY' %}Completed{% endif %}"
+                                                        onclick="return confirm('Update order status?')">
+                                                    <i class="fas fa-{% if order.order_status == 'PENDING' %}check{% elif order.order_status == 'CONFIRMED' %}utensils{% elif order.order_status == 'PREPARING' %}truck{% elif order.order_status == 'READY' %}check-double{% endif %}"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No orders found</h5>
+                    <p class="text-muted">
+                        {% if current_status %}
+                            No {{ current_status|lower }} orders at the moment.
+                        {% else %}
+                            No orders have been placed yet.
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh orders every 30 seconds
+setInterval(function() {
+    location.reload();
+}, 30000);
+
+// Quick status update shortcuts
+$(document).ready(function() {
+    // Add keyboard shortcuts for quick actions
+    $(document).on('keydown', function(e) {
+        // Press 'R' to refresh
+        if (e.key === 'r' && !e.ctrlKey && !e.metaKey && !$(e.target).is('input, textarea')) {
+            e.preventDefault();
+            location.reload();
+        }
+    });
+});
+</script>
+{% endblock %}

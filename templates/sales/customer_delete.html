@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Customer - {{ customer.name }} - SibLore POS{% endblock %}
+
+{% block extra_css %}
+<style>
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+.danger-glow {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+}
+
+.confirmation-input {
+    transition: all 0.3s ease;
+}
+
+.confirmation-input:focus {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.delete-button {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.delete-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.delete-button:hover::before {
+    left: 100%;
+}
+
+.delete-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.delete-button:disabled::before {
+    display: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto">
+        <!-- Warning Header -->
+        <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-lg">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="bg-red-100 rounded-full p-3">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h1 class="text-2xl font-bold text-red-800">Delete Customer</h1>
+                    <p class="text-red-700 mt-1">This action cannot be undone and will permanently remove the customer from your system.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Information Card -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+                <h2 class="text-xl font-semibold text-white flex items-center">
+                    <i class="fas fa-user-times mr-3"></i>
+                    Customer Information
+                </h2>
+            </div>
+            
+            <div class="p-6">
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 rounded-full p-2 mr-3">
+                                <i class="fas fa-user text-blue-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Customer Name</p>
+                                <p class="font-semibold text-gray-900">{{ customer.name }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <div class="bg-green-100 rounded-full p-2 mr-3">
+                                <i class="fas fa-phone text-green-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Phone</p>
+                                <p class="font-semibold text-gray-900">{{ customer.phone|default:"Not provided" }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <div class="bg-purple-100 rounded-full p-2 mr-3">
+                                <i class="fas fa-envelope text-purple-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Email</p>
+                                <p class="font-semibold text-gray-900">{{ customer.email|default:"Not provided" }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <div class="bg-yellow-100 rounded-full p-2 mr-3">
+                                <i class="fas fa-credit-card text-yellow-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Credit Limit</p>
+                                <p class="font-semibold text-gray-900">{{ currency_symbol }}{{ customer.credit_limit|floatformat:2 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if customer.address %}
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <div class="flex items-start">
+                            <div class="bg-indigo-100 rounded-full p-2 mr-3">
+                                <i class="fas fa-map-marker-alt text-indigo-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Address</p>
+                                <p class="font-semibold text-gray-900">{{ customer.address }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Confirmation Form -->
+                <form method="post" id="deleteForm" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-info-circle text-amber-600 mt-1 mr-3"></i>
+                            <div>
+                                <h3 class="text-sm font-medium text-amber-800">Confirmation Required</h3>
+                                <p class="text-sm text-amber-700 mt-1">
+                                    To prevent accidental deletions, please type the customer's name exactly as shown below:
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="customer_name" class="block text-sm font-medium text-gray-700 mb-2">
+                            Type <span class="font-bold text-red-600 bg-red-50 px-2 py-1 rounded">{{ customer.name }}</span> to confirm deletion:
+                        </label>
+                        <input type="text" 
+                               id="customer_name" 
+                               name="customer_name" 
+                               required
+                               class="confirmation-input w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-lg"
+                               placeholder="Enter customer name to confirm">
+                        <p class="mt-2 text-sm text-gray-500">
+                            <i class="fas fa-shield-alt mr-1"></i>
+                            This verification step helps prevent accidental data loss.
+                        </p>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                        <a href="{% url 'sales:customers_list' %}" 
+                           class="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors duration-200 flex items-center justify-center font-medium">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Cancel & Keep Customer
+                        </a>
+                        <button type="submit" 
+                                id="deleteButton"
+                                class="delete-button flex-1 bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all duration-200 flex items-center justify-center font-medium disabled:bg-gray-300 disabled:cursor-not-allowed">
+                            <i class="fas fa-trash mr-2"></i>
+                            <span id="buttonText">Delete Customer Permanently</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Additional Warning -->
+        <div class="bg-red-100 border border-red-200 rounded-lg p-4 text-center">
+            <i class="fas fa-exclamation-triangle text-red-600 text-2xl mb-2"></i>
+            <p class="text-red-800 font-medium">
+                <strong>Important:</strong> Once deleted, all customer data including sales history and debt records will be permanently removed.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const customerNameInput = document.getElementById('customer_name');
+    const deleteButton = document.getElementById('deleteButton');
+    const buttonText = document.getElementById('buttonText');
+    const deleteForm = document.getElementById('deleteForm');
+    const expectedName = '{{ customer.name }}';
+    
+    customerNameInput.addEventListener('input', function() {
+        const inputValue = this.value.trim();
+        const isMatch = inputValue.toLowerCase() === expectedName.toLowerCase();
+        
+        if (isMatch) {
+            deleteButton.disabled = false;
+            deleteButton.classList.remove('bg-gray-300');
+            deleteButton.classList.add('bg-red-600', 'hover:bg-red-700', 'danger-glow');
+            buttonText.textContent = 'Delete Customer Permanently';
+            
+            // Add success animation
+            this.classList.remove('border-gray-300');
+            this.classList.add('border-green-500', 'bg-green-50');
+        } else {
+            deleteButton.disabled = true;
+            deleteButton.classList.remove('bg-red-600', 'hover:bg-red-700', 'danger-glow');
+            deleteButton.classList.add('bg-gray-300');
+            buttonText.textContent = 'Type Customer Name Correctly';
+            
+            // Remove success styling
+            this.classList.remove('border-green-500', 'bg-green-50');
+            this.classList.add('border-gray-300');
+        }
+    });
+    
+    // Add shake animation on wrong submission attempt
+    deleteForm.addEventListener('submit', function(e) {
+        if (customerNameInput.value.trim().toLowerCase() !== expectedName.toLowerCase()) {
+            e.preventDefault();
+            customerNameInput.classList.add('shake', 'border-red-500');
+            setTimeout(() => {
+                customerNameInput.classList.remove('shake');
+            }, 500);
+        }
+    });
+    
+    // Initially disable the delete button
+    deleteButton.disabled = true;
+    deleteButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+    deleteButton.classList.add('bg-gray-300');
+    buttonText.textContent = 'Type Customer Name Correctly';
+    
+    // Add keyboard shortcut (Ctrl+D to focus input)
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'd') {
+            e.preventDefault();
+            customerNameInput.focus();
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -220,14 +220,31 @@ function addToCart(id, name, price, stock) {
     const existingItem = cart.find(item => item.id === id);
     const stockInt = parseInt(stock);
     
+    // Prompt for quantity
+    let quantity = 1;
+    if (stockInt > 1) {
+        const input = prompt(`Enter quantity for ${name} (Available: ${stockInt}):`, '1');
+        if (input === null) return; // User cancelled
+        
+        quantity = parseInt(input);
+        if (isNaN(quantity) || quantity < 1) {
+            alert('Invalid quantity. Using 1.');
+            quantity = 1;
+        } else if (quantity > stockInt) {
+            alert(`Only ${stockInt} units available. Using maximum available.`);
+            quantity = stockInt;
+        }
+    }
+    
     if (existingItem) {
-        if (existingItem.quantity >= stockInt) {
-            alert(`Only ${stockInt} units available in stock!`);
+        const newTotalQuantity = existingItem.quantity + quantity;
+        if (newTotalQuantity > stockInt) {
+            alert(`Cannot add ${quantity} more units. Only ${stockInt - existingItem.quantity} more available in stock!`);
             return;
         }
-        existingItem.quantity++;
+        existingItem.quantity = newTotalQuantity;
     } else {
-        cart.push({ id, name, price, quantity: 1, stock: stockInt });
+        cart.push({ id, name, price, quantity, stock: stockInt });
     }
     
     updateCart();
@@ -245,15 +262,22 @@ function updateCart() {
                     <p class="font-medium text-sm">${item.name}</p>
                     <p class="text-xs text-gray-600">KES ${item.price.toFixed(2)} x ${item.quantity}</p>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <button onclick="updateQuantity(${item.id}, -1)" class="text-red-600 hover:text-red-800">
+                <div class="flex items-center space-x-1">
+                    <button onclick="updateQuantity(${item.id}, -1)" class="text-red-600 hover:text-red-800 p-1">
                         <i class="fas fa-minus-circle"></i>
                     </button>
-                    <span class="font-medium">${item.quantity}</span>
-                    <button onclick="updateQuantity(${item.id}, 1)" class="text-green-600 hover:text-green-800">
+                    <input type="number" 
+                           id="qty-${item.id}" 
+                           value="${item.quantity}" 
+                           min="1" 
+                           max="${item.stock}"
+                           class="w-14 px-1 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                           onchange="setQuantity(${item.id}, this.value)"
+                           onkeypress="if(event.key === 'Enter') { this.blur(); }">
+                    <button onclick="updateQuantity(${item.id}, 1)" class="text-green-600 hover:text-green-800 p-1">
                         <i class="fas fa-plus-circle"></i>
                     </button>
-                    <button onclick="removeFromCart(${item.id})" class="text-red-600 hover:text-red-800 ml-2">
+                    <button onclick="removeFromCart(${item.id})" class="text-red-600 hover:text-red-800 p-1 ml-1">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -279,6 +303,30 @@ function updateQuantity(id, change) {
         } else {
             alert(`Only ${stock} units available in stock!`);
         }
+    }
+}
+
+// Set quantity directly from input field
+function setQuantity(id, newQuantity) {
+    const item = cart.find(item => item.id === id);
+    if (item) {
+        const qty = parseInt(newQuantity);
+        const stock = parseInt(item.stock);
+        
+        if (isNaN(qty) || qty < 1) {
+            alert('Quantity must be at least 1!');
+            updateCart(); // Reset to current quantity
+            return;
+        }
+        
+        if (qty > stock) {
+            alert(`Only ${stock} units available in stock!`);
+            updateCart(); // Reset to current quantity
+            return;
+        }
+        
+        item.quantity = qty;
+        updateCart();
     }
 }
 

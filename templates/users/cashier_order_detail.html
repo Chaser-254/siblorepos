@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order {{ order.order_number }} - Cashier{% endblock %}
+
+{% block extra_css %}
+<style>
+.status-badge {
+    font-size: 1.1em;
+    padding: 0.5em 1em;
+}
+.order-item {
+    border-left: 3px solid #007bff;
+    transition: background-color 0.2s;
+}
+.order-item:hover {
+    background-color: #f8f9fa;
+}
+.customer-info {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <div>
+            <h1 class="h2">Order Details</h1>
+            <p class="text-muted">Order #{{ order.order_number }}</p>
+        </div>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <a href="{% url 'users:cashier_orders' %}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Back to Orders
+            </a>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                <i class="fas fa-edit"></i> Update Status
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Order Information -->
+        <div class="col-lg-8">
+            <!-- Order Status and Basic Info -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Order Information</h5>
+                            <div class="mb-2">
+                                <strong>Status:</strong>
+                                <span class="badge bg-{% if order.order_status == 'PENDING' %}warning{% elif order.order_status == 'CONFIRMED' %}info{% elif order.order_status == 'PREPARING' %}primary{% elif order.order_status == 'READY' %}success{% elif order.order_status == 'COMPLETED' %}secondary{% else %}danger{% endif %} status-badge ms-2">
+                                    {{ order.get_order_status_display }}
+                                </span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Order Time:</strong> {{ order.created_at|date:"M d, Y H:i" }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Payment Status:</strong>
+                                <span class="badge bg-{% if order.payment_status == 'PAID' %}success{% elif order.payment_status == 'PENDING' %}warning{% else %}danger{% endif %}">
+                                    {{ order.get_payment_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Order Summary</h5>
+                            <div class="mb-2">
+                                <strong>Subtotal:</strong> KSh {{ order.subtotal }}
+                            </div>
+                            {% if order.delivery_fee > 0 %}
+                                <div class="mb-2">
+                                    <strong>Delivery Fee:</strong> KSh {{ order.delivery_fee }}
+                                </div>
+                            {% endif %}
+                            <div class="mb-2">
+                                <strong>Total Amount:</strong> <span class="text-primary">KSh {{ order.total_amount }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if order.notes %}
+                        <div class="mt-3">
+                            <h6>Customer Notes:</h6>
+                            <div class="alert alert-info">{{ order.notes }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Items ({{ order.items.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in order.items.all %}
+                    <div class="order-item p-3 mb-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h6 class="mb-1">{{ item.product.name }}</h6>
+                                <small class="text-muted">{{ item.product.category }}</small>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <span class="badge bg-secondary">Qty: {{ item.quantity }}</span>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <strong>KSh {{ item.price }}</strong> each
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <strong class="text-primary">KSh {{ item.subtotal }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Information -->
+        <div class="col-lg-4">
+            <div class="card customer-info">
+                <div class="card-header">
+                    <h5 class="mb-0">Customer Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted">Name</h6>
+                        <p class="mb-0">{{ order.customer_name }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted">Phone</h6>
+                        <p class="mb-0">
+                            <a href="tel:{{ order.customer_phone }}">{{ order.customer_phone }}</a>
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted">Email</h6>
+                        <p class="mb-0">
+                            <a href="mailto:{{ order.customer_email }}">{{ order.customer_email }}</a>
+                        </p>
+                    </div>
+                    
+                    {% if order.delivery_address %}
+                        <div class="mb-3">
+                            <h6 class="text-muted">Delivery Address</h6>
+                            <p class="mb-0">{{ order.delivery_address }}</p>
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            <h6 class="text-muted">Order Type</h6>
+                            <p class="mb-0">
+                                <i class="fas fa-store"></i> Pickup
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                            <i class="fas fa-edit"></i> Update Status
+                        </button>
+                        
+                        <a href="tel:{{ order.customer_phone }}" class="btn btn-outline-primary">
+                            <i class="fas fa-phone"></i> Call Customer
+                        </a>
+                        
+                        <a href="mailto:{{ order.customer_email }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-envelope"></i> Email Customer
+                        </a>
+                        
+                        {% if order.delivery_address %}
+                            <button type="button" class="btn btn-outline-info" onclick="window.open('https://maps.google.com/?q={{ order.delivery_address }}', '_blank')">
+                                <i class="fas fa-map"></i> View on Map
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateStatusModalLabel">Update Order Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'users:cashier_update_order_status' order.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="status" class="form-label">New Status</label>
+                        <select name="status" id="status" class="form-select" required>
+                            <option value="">Select new status...</option>
+                            {% for status_value, status_label in status_choices %}
+                                <option value="{{ status_value }}" {% if order.order_status == status_value %}selected{% endif %}>
+                                    {{ status_label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Current Status:</strong> {{ order.get_order_status_display }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Auto-refresh every 30 seconds
+    setInterval(function() {
+        location.reload();
+    }, 30000);
+    
+    // Keyboard shortcuts
+    $(document).on('keydown', function(e) {
+        // Press 'U' to open update status modal
+        if (e.key === 'u' && !e.ctrlKey && !e.metaKey && !$(e.target).is('input, textarea')) {
+            e.preventDefault();
+            $('#updateStatusModal').modal('show');
+        }
+        // Press 'R' to refresh
+        if (e.key === 'r' && !e.ctrlKey && !e.metaKey && !$(e.target).is('input, textarea')) {
+            e.preventDefault();
+            location.reload();
+        }
+    });
+});
+</script>
+{% endblock %}

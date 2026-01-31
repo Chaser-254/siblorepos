@@ -8,7 +8,7 @@ from decimal import Decimal
 import json
 from .models import Customer, Sale, SaleItem, Debt, DebtPayment, Revenue
 from products.models import Product, Stock, Category, StockMovement
-from users.decorators import admin_required, can_view_reports, get_user_profile, get_shop_admin_for_user
+from users.decorators import admin_required, can_view_reports, get_user_profile, get_shop_admin_for_user, restrict_cashier_access
 import uuid
 
 @login_required
@@ -69,8 +69,19 @@ def dashboard(request):
             revenue_today = Revenue.objects.create(date=today)
         
         # Debt stats - only admins can see debts
-        total_debts = Debt.objects.filter(status__in=['PENDING', 'PARTIAL']).aggregate(total=Sum('balance'))['total'] or 0
-        overdue_debts = Debt.objects.filter(status='OVERDUE').aggregate(total=Sum('balance'))['total'] or 0
+        if shop_admin:
+            total_debts = Debt.objects.filter(
+                sale__shop_admin=shop_admin,
+                status__in=['PENDING', 'PARTIAL']
+            ).aggregate(total=Sum('balance'))['total'] or 0
+            overdue_debts = Debt.objects.filter(
+                sale__shop_admin=shop_admin,
+                status='OVERDUE'
+            ).aggregate(total=Sum('balance'))['total'] or 0
+        else:
+            # Site admins can see all debts
+            total_debts = Debt.objects.filter(status__in=['PENDING', 'PARTIAL']).aggregate(total=Sum('balance'))['total'] or 0
+            overdue_debts = Debt.objects.filter(status='OVERDUE').aggregate(total=Sum('balance'))['total'] or 0
     else:
         revenue_today = None
         total_debts = 0
@@ -78,19 +89,37 @@ def dashboard(request):
     
     # Top selling products - only admins can see
     if profile and profile.can_view_all_reports():
-        top_products = Product.objects.filter(
-            saleitem__sale__created_at__date=today,
-            saleitem__sale__status='COMPLETED'
-        ).annotate(
-            total_sold=Sum('saleitem__quantity'),
-            total_revenue=Sum('saleitem__total_price')
-        ).order_by('-total_sold')[:5]
-        
-        # Low stock alerts - only admins can see
-        low_stock_products = Stock.objects.filter(
-            quantity__lte=F('reorder_level'),
-            is_active=True
-        ).select_related('product')[:5]
+        if shop_admin:
+            top_products = Product.objects.filter(
+                shop_admin=shop_admin,
+                saleitem__sale__created_at__date=today,
+                saleitem__sale__status='COMPLETED'
+            ).annotate(
+                total_sold=Sum('saleitem__quantity'),
+                total_revenue=Sum('saleitem__total_price')
+            ).order_by('-total_sold')[:5]
+            
+            # Low stock alerts - only admins can see
+            low_stock_products = Stock.objects.filter(
+                product__shop_admin=shop_admin,
+                quantity__lte=F('reorder_level'),
+                is_active=True
+            ).select_related('product')[:5]
+        else:
+            # Site admins can see all products
+            top_products = Product.objects.filter(
+                saleitem__sale__created_at__date=today,
+                saleitem__sale__status='COMPLETED'
+            ).annotate(
+                total_sold=Sum('saleitem__quantity'),
+                total_revenue=Sum('saleitem__total_price')
+            ).order_by('-total_sold')[:5]
+            
+            # Low stock alerts - only admins can see
+            low_stock_products = Stock.objects.filter(
+                quantity__lte=F('reorder_level'),
+                is_active=True
+            ).select_related('product')[:5]
     else:
         top_products = []
         low_stock_products = []
@@ -104,6 +133,8 @@ def dashboard(request):
         'recent_sales': recent_sales,
         'total_debts': total_debts,
         'overdue_debts': overdue_debts,
+        'currency': 'KES',
+        'currency_symbol': 'KSh',
     }
     
     return render(request, 'sales/dashboard.html', context)
@@ -112,13 +143,20 @@ def dashboard(request):
 def pos_terminal(request):
     # Get shop admin for filtering
     shop_admin = get_shop_admin_for_user(request.user)
+    
     if shop_admin:
         products = Product.objects.filter(is_active=True, shop_admin=shop_admin).select_related('category').prefetch_related('stock_records')
+        # Shop admins can only see customers from their shop
+        customers = Customer.objects.filter(
+            shop_admin=shop_admin,
+            is_active=True
+        )
     else:
-        # Site admins can see all products
+        # Site admins can see all products and customers
         products = Product.objects.filter(is_active=True).select_related('category').prefetch_related('stock_records')
+        customers = Customer.objects.filter(is_active=True)
+    
     categories = Category.objects.all()
-    customers = Customer.objects.filter(is_active=True)
     
     context = {
         'products': products,
@@ -150,6 +188,11 @@ def process_sale(request):
             shop_admin = get_shop_admin_for_user(request.user)
             if not shop_admin:
                 return JsonResponse({'success': False, 'message': 'Access denied. No shop admin assigned.'})
+            
+            # Associate customer with shop admin if they don't have one
+            if customer and not customer.shop_admin:
+                customer.shop_admin = shop_admin
+                customer.save()
             
             sale = Sale.objects.create(
                 invoice_number=invoice_number,
@@ -489,21 +532,45 @@ def sale_delete(request, pk):
     return render(request, 'sales/sale_delete.html', {'sale': sale})
 
 @login_required
+@restrict_cashier_access
 def customers_list(request):
-    customers = Customer.objects.annotate(
-        total_debt_amount=Sum('debts__balance', filter=Q(debts__status__in=['PENDING', 'PARTIAL']))
-    ).order_by('name')
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
     
-    # Calculate active customers count
-    active_customers_count = Customer.objects.filter(is_active=True).count()
+    if shop_admin:
+        # Shop admins can only see customers from their shop
+        customers = Customer.objects.filter(
+            shop_admin=shop_admin
+        ).annotate(
+            total_debt_amount=Sum('debts__balance', filter=Q(debts__status__in=['PENDING', 'PARTIAL']))
+        ).order_by('name')
+        
+        # Calculate active customers count for this shop
+        active_customers_count = Customer.objects.filter(
+            shop_admin=shop_admin,
+            is_active=True
+        ).count()
+    else:
+        # Site admins can see all customers
+        customers = Customer.objects.annotate(
+            total_debt_amount=Sum('debts__balance', filter=Q(debts__status__in=['PENDING', 'PARTIAL']))
+        ).order_by('name')
+        
+        # Calculate active customers count
+        active_customers_count = Customer.objects.filter(is_active=True).count()
     
     context = {
         'customers': customers,
         'active_customers_count': active_customers_count,
+        'currency': 'KES',
+        'currency_symbol': 'KSh',
+        'total_debt': customers.aggregate(total=Sum('total_debt_amount'))['total'] or 0,
+        'total_credit_limit': customers.aggregate(total=Sum('credit_limit'))['total'] or 0,
     }
     return render(request, 'sales/customers_list.html', context)
 
 @login_required
+@restrict_cashier_access
 def customer_create(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -512,12 +579,16 @@ def customer_create(request):
         address = request.POST.get('address')
         credit_limit = request.POST.get('credit_limit', 0)
         
+        # Get shop admin for the current user
+        shop_admin = get_shop_admin_for_user(request.user)
+        
         customer = Customer.objects.create(
             name=name,
             phone=phone,
             email=email,
             address=address,
-            credit_limit=credit_limit
+            credit_limit=credit_limit,
+            shop_admin=shop_admin
         )
         
         messages.success(request, f'Customer "{customer.name}" created successfully!')
@@ -526,8 +597,140 @@ def customer_create(request):
     return render(request, 'sales/customer_form.html', {'title': 'Add Customer'})
 
 @login_required
+@restrict_cashier_access
+def customer_edit(request, pk):
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    
+    # Filter customer based on user role and shop
+    if shop_admin:
+        # Shop admins can only edit customers from their shop
+        customer = get_object_or_404(Customer.objects.filter(shop_admin=shop_admin), pk=pk)
+    else:
+        # Site admins can edit any customer
+        customer = get_object_or_404(Customer, pk=pk)
+    
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        phone = request.POST.get('phone')
+        email = request.POST.get('email')
+        address = request.POST.get('address')
+        credit_limit = request.POST.get('credit_limit', 0)
+        
+        customer.name = name
+        customer.phone = phone
+        customer.email = email
+        customer.address = address
+        customer.credit_limit = credit_limit
+        customer.save()
+        
+        messages.success(request, f'Customer "{customer.name}" updated successfully!')
+        return redirect('sales:customers_list')
+    
+    return render(request, 'sales/customer_form.html', {
+        'title': 'Edit Customer',
+        'customer': customer,
+        'edit_mode': True
+    })
+
+@login_required
+@restrict_cashier_access
+def customer_view(request, pk):
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    
+    # Filter customer based on user role and shop
+    if shop_admin:
+        # Shop admins can only view customers from their shop
+        customer = get_object_or_404(Customer.objects.filter(shop_admin=shop_admin), pk=pk)
+    else:
+        # Site admins can view any customer
+        customer = get_object_or_404(Customer, pk=pk)
+    
+    # Get customer's sales and debts
+    customer_sales = Sale.objects.filter(customer=customer).order_by('-created_at')[:10]
+    customer_debts = Debt.objects.filter(customer=customer).order_by('-created_at')
+    
+    # Calculate totals
+    total_sales = customer_sales.aggregate(total=Sum('total_amount'))['total'] or 0
+    total_debt = customer_debts.aggregate(total=Sum('balance'))['total'] or 0
+    
+    context = {
+        'customer': customer,
+        'customer_sales': customer_sales,
+        'customer_debts': customer_debts,
+        'total_sales': total_sales,
+        'total_debt': total_debt,
+        'currency': 'KES',
+        'currency_symbol': 'KSh',
+    }
+    
+    return render(request, 'sales/customer_detail.html', context)
+
+@login_required
+def customer_delete(request, pk):
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    
+    # Get user profile
+    if request.user.is_authenticated:
+        profile = get_user_profile(request.user)
+    else:
+        profile = None
+    
+    # Filter customer based on user role and shop
+    if shop_admin:
+        # Shop admins can only delete customers from their shop
+        customer = get_object_or_404(Customer.objects.filter(shop_admin=shop_admin), pk=pk)
+    else:
+        # Site admins can delete any customer
+        customer = get_object_or_404(Customer, pk=pk)
+    
+    # Check if user can manage customers (shop admins and site admins)
+    if not profile or not (profile.is_shop_admin or profile.is_site_admin):
+        messages.error(request, 'Access denied. Only admins can delete customers.')
+        return redirect('sales:customers_list')
+    
+    # Check if customer has existing sales
+    customer_sales = Sale.objects.filter(customer=customer)
+    if customer_sales.exists():
+        messages.error(request, f'Cannot delete customer "{customer.name}" because they have {customer_sales.count()} sale(s) associated with them.')
+        return redirect('sales:customers_list')
+    
+    # Check if customer has existing debts
+    customer_debts = Debt.objects.filter(customer=customer)
+    if customer_debts.exists():
+        messages.error(request, f'Cannot delete customer "{customer.name}" because they have outstanding debts.')
+        return redirect('sales:customers_list')
+    
+    if request.method == 'POST':
+        customer_name = request.POST.get('customer_name', '').strip()
+        
+        if customer_name.lower() == customer.name.lower():
+            customer.delete()
+            messages.success(request, f'Customer "{customer.name}" has been deleted successfully!')
+            return redirect('sales:customers_list')
+        else:
+            messages.error(request, 'Customer name confirmation does not match. Please type the exact customer name.')
+    
+    context = {
+        'customer': customer,
+    }
+    return render(request, 'sales/customer_delete.html', context)
+
+@login_required
+@restrict_cashier_access
 def debts_list(request):
-    debts = Debt.objects.select_related('customer', 'sale').order_by('-created_at')
+    # Get shop admin for filtering
+    shop_admin = get_shop_admin_for_user(request.user)
+    
+    if shop_admin:
+        debts = Debt.objects.filter(
+            sale__shop_admin=shop_admin
+        ).select_related('customer', 'sale').order_by('-created_at')
+    else:
+        # Site admins can see all debts
+        debts = Debt.objects.select_related('customer', 'sale').order_by('-created_at')
     
     # Filters
     status = request.GET.get('status')
@@ -537,10 +740,17 @@ def debts_list(request):
     context = {
         'debts': debts,
         'status_choices': Debt.STATUS_CHOICES,
+        'currency': 'KES',
+        'currency_symbol': 'KSh',
+        'total_debts': debts.aggregate(total=Sum('amount'))['total'] or 0,
+        'total_paid': debts.aggregate(total=Sum('amount_paid'))['total'] or 0,
+        'total_outstanding': debts.aggregate(total=Sum('balance'))['total'] or 0,
+        'total_overdue': debts.filter(status='OVERDUE').aggregate(total=Sum('balance'))['total'] or 0,
     }
     return render(request, 'sales/debts_list.html', context)
 
 @login_required
+@restrict_cashier_access
 def pay_debt(request, pk):
     debt = get_object_or_404(Debt.objects.select_related('customer'), pk=pk)
     
@@ -586,14 +796,6 @@ def reports(request):
     if not date_to:
         date_to = timezone.now().date()
     
-    # Get revenue data
-    if shop_admin:
-        revenues = Revenue.objects.filter(date__range=[date_from, date_to]).order_by('date')
-        # Note: Revenue model doesn't have shop_admin field, so shop admins will see all revenue data
-        # This might need to be addressed in a future update
-    else:
-        revenues = Revenue.objects.filter(date__range=[date_from, date_to]).order_by('date')
-    
     # Get sales data filtered by shop
     if shop_admin:
         sales = Sale.objects.filter(
@@ -602,32 +804,50 @@ def reports(request):
             shop_admin=shop_admin
         ).select_related('customer').prefetch_related('sale_items__product')
     else:
+        # Site admins can see all sales
         sales = Sale.objects.filter(
             created_at__date__range=[date_from, date_to],
             status='COMPLETED'
         ).select_related('customer').prefetch_related('sale_items__product')
     
-    # Calculate totals
-    total_sales = revenues.aggregate(total=Sum('total_sales'))['total'] or 0
-    total_profit = revenues.aggregate(total=Sum('total_profit'))['total'] or 0
-    total_transactions = revenues.aggregate(total=Sum('total_transactions'))['total'] or 0
+    # Calculate totals from sales data (not revenue data for proper shop filtering)
+    total_sales = sales.aggregate(total=Sum('total_amount'))['total'] or 0
+    total_transactions = sales.count()
     average_transaction = total_sales / total_transactions if total_transactions > 0 else 0
     
-    # Payment method breakdown
+    # Calculate profit from sales items
+    total_profit = 0
+    for sale in sales:
+        for item in sale.sale_items.all():
+            if item.product:
+                profit_per_item = (item.unit_price - item.product.cost_price) * item.quantity
+                total_profit += profit_per_item
+    
+    # Payment method breakdown from sales data
     payment_breakdown = {
-        'cash': revenues.aggregate(total=Sum('cash_sales'))['total'] or 0,
-        'card': revenues.aggregate(total=Sum('card_sales'))['total'] or 0,
-        'mobile': revenues.aggregate(total=Sum('mobile_sales'))['total'] or 0,
-        'bank': revenues.aggregate(total=Sum('bank_sales'))['total'] or 0,
-        'credit': revenues.aggregate(total=Sum('credit_sales'))['total'] or 0,
+        'cash': sales.filter(payment_method='CASH').aggregate(total=Sum('total_amount'))['total'] or 0,
+        'card': sales.filter(payment_method='CARD').aggregate(total=Sum('total_amount'))['total'] or 0,
+        'mobile': sales.filter(payment_method='MOBILE').aggregate(total=Sum('total_amount'))['total'] or 0,
+        'bank': sales.filter(payment_method='BANK').aggregate(total=Sum('total_amount'))['total'] or 0,
+        'credit': sales.filter(payment_method='CREDIT').aggregate(total=Sum('total_amount'))['total'] or 0,
     }
     
-    # Prepare data for revenue chart
-    revenue_chart_data = json.dumps([float(revenue.total_sales) for revenue in revenues])
-    revenue_chart_labels = json.dumps([revenue.date.strftime('%b %d') for revenue in revenues])
+    # Prepare daily sales data for chart
+    from django.db.models import Count
+    from django.db.models.functions import Extract
+    daily_sales = sales.annotate(
+        day=Extract('created_at', 'day'),
+        month=Extract('created_at', 'month'),
+        year=Extract('created_at', 'year')
+    ).values('day', 'month', 'year').annotate(
+        daily_total=Sum('total_amount'),
+        daily_count=Count('id')
+    ).order_by('year', 'month', 'day')
+    
+    revenue_chart_data = json.dumps([float(sale['daily_total']) for sale in daily_sales])
+    revenue_chart_labels = json.dumps([f"{sale['month']:02d}/{sale['day']:02d}" for sale in daily_sales])
     
     context = {
-        'revenues': revenues,
         'sales': sales,
         'total_sales': total_sales,
         'total_profit': total_profit,
@@ -638,6 +858,8 @@ def reports(request):
         'date_to': date_to,
         'revenue_chart_data': revenue_chart_data,
         'revenue_chart_labels': revenue_chart_labels,
+        'currency': 'KES',
+        'currency_symbol': 'KSh',
     }
     
     return render(request, 'sales/reports.html', context)
@@ -656,14 +878,6 @@ def report_print(request):
     if not date_to:
         date_to = timezone.now().date()
     
-    # Get revenue data
-    if shop_admin:
-        revenues = Revenue.objects.filter(date__range=[date_from, date_to]).order_by('date')
-        # Note: Revenue model doesn't have shop_admin field, so shop admins will see all revenue data
-        # This might need to be addressed in a future update
-    else:
-        revenues = Revenue.objects.filter(date__range=[date_from, date_to]).order_by('date')
-    
     # Get sales data filtered by shop
     if shop_admin:
         sales = Sale.objects.filter(
@@ -672,24 +886,32 @@ def report_print(request):
             shop_admin=shop_admin
         ).select_related('customer').prefetch_related('sale_items__product')
     else:
+        # Site admins can see all sales
         sales = Sale.objects.filter(
             created_at__date__range=[date_from, date_to],
             status='COMPLETED'
         ).select_related('customer').prefetch_related('sale_items__product')
     
-    # Calculate totals
-    total_sales = revenues.aggregate(total=Sum('total_sales'))['total'] or 0
-    total_profit = revenues.aggregate(total=Sum('total_profit'))['total'] or 0
-    total_transactions = revenues.aggregate(total=Sum('total_transactions'))['total'] or 0
+    # Calculate totals from sales data (not revenue data for proper shop filtering)
+    total_sales = sales.aggregate(total=Sum('total_amount'))['total'] or 0
+    total_transactions = sales.count()
     average_transaction = total_sales / total_transactions if total_transactions > 0 else 0
     
-    # Payment method breakdown
+    # Calculate profit from sales items
+    total_profit = 0
+    for sale in sales:
+        for item in sale.sale_items.all():
+            if item.product:
+                profit_per_item = (item.unit_price - item.product.cost_price) * item.quantity
+                total_profit += profit_per_item
+    
+    # Payment method breakdown from sales data
     payment_breakdown = {
-        'cash': revenues.aggregate(total=Sum('cash_sales'))['total'] or 0,
-        'card': revenues.aggregate(total=Sum('card_sales'))['total'] or 0,
-        'mobile': revenues.aggregate(total=Sum('mobile_sales'))['total'] or 0,
-        'bank': revenues.aggregate(total=Sum('bank_sales'))['total'] or 0,
-        'credit': revenues.aggregate(total=Sum('credit_sales'))['total'] or 0,
+        'cash': sales.filter(payment_method='CASH').aggregate(total=Sum('total_amount'))['total'] or 0,
+        'card': sales.filter(payment_method='CARD').aggregate(total=Sum('total_amount'))['total'] or 0,
+        'mobile': sales.filter(payment_method='MOBILE').aggregate(total=Sum('total_amount'))['total'] or 0,
+        'bank': sales.filter(payment_method='BANK').aggregate(total=Sum('total_amount'))['total'] or 0,
+        'credit': sales.filter(payment_method='CREDIT').aggregate(total=Sum('total_amount'))['total'] or 0,
     }
     
     context = {
@@ -701,6 +923,8 @@ def report_print(request):
         'payment_breakdown': payment_breakdown,
         'date_from': date_from,
         'date_to': date_to,
+        'currency': 'KES',
+        'currency_symbol': 'KSh',
     }
     
     return render(request, 'sales/report_print.html', context)

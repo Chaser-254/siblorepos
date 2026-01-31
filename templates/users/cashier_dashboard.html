@@ -1,0 +1,913 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cashier Dashboard - {{ shop_admin.shop_name|default:"Shop" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Custom animations and transitions */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.dashboard-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    animation: slideInUp 0.5s ease-out;
+    backdrop-filter: blur(10px);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+}
+
+/* Enhanced stat cards */
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 150px;
+    height: 150px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    transform: translate(50px, -50px);
+}
+
+.stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+    transform: translate(-30px, 30px);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+}
+
+.stat-icon {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Status-specific card styles */
+.card-pending {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.card-confirmed {
+    background: linear-gradient(135deg, #4834d4 0%, #686de0 100%);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.card-ready {
+    background: linear-gradient(135deg, #6ab04c 0%, #badc58 100%);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.card-preparing {
+    background: linear-gradient(135deg, #f9ca24 0%, #f0932b 100%);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Enhanced header */
+.dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+    animation: shimmer 3s infinite;
+}
+
+/* Order table enhancements */
+.order-card {
+    border-left: 4px solid #007bff;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin-bottom: 4px;
+}
+
+.order-card:hover {
+    background-color: #f8f9fa;
+    border-left-width: 6px;
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.status-pending { 
+    border-left-color: #ff6b6b; 
+    background: linear-gradient(90deg, rgba(255,107,107,0.05) 0%, transparent 100%);
+}
+.status-confirmed { 
+    border-left-color: #4834d4; 
+    background: linear-gradient(90deg, rgba(72,52,212,0.05) 0%, transparent 100%);
+}
+.status-preparing { 
+    border-left-color: #f9ca24; 
+    background: linear-gradient(90deg, rgba(249,202,36,0.05) 0%, transparent 100%);
+}
+.status-ready { 
+    border-left-color: #6ab04c; 
+    background: linear-gradient(90deg, rgba(106,176,76,0.05) 0%, transparent 100%);
+}
+.status-completed { 
+    border-left-color: #95a5a6; 
+    background: linear-gradient(90deg, rgba(149,165,166,0.05) 0%, transparent 100%);
+}
+
+/* Badge enhancements */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5em 0.75em;
+    font-weight: 600;
+    border-radius: 50px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Enhanced buttons */
+.btn-action {
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-action::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-action:hover::before {
+    left: 100%;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+/* Quick action buttons */
+.quick-action-btn {
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Empty state styling */
+.empty-state {
+    padding: 4rem 2rem;
+    text-align: center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 20px;
+    border: 2px dashed #cbd5e0;
+}
+
+.empty-state i {
+    color: #718096;
+    margin-bottom: 1.5rem;
+    opacity: 0.6;
+}
+
+/* Loading animation */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Number animation */
+.number-animate {
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .dashboard-header {
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        margin-bottom: 1rem;
+        border-radius: 15px;
+    }
+    
+    .btn-action {
+        padding: 0.5rem 1.5rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* Professional table styling */
+.professional-table {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+}
+
+.professional-table thead {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.professional-table th {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    color: #495057;
+    border: none;
+    padding: 1rem;
+}
+
+.professional-table td {
+    padding: 1rem;
+    vertical-align: middle;
+    border: none;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+/* Status indicators */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Professional alerts */
+.alert-professional {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+}
+
+/* Enhanced metrics */
+.metric-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Enhanced Header -->
+    <div class="dashboard-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3">
+                        <i class="fas fa-cash-register fa-2x"></i>
+                    </div>
+                    <div>
+                        <h1 class="h2 mb-1">Cashier Dashboard</h1>
+                        <p class="mb-0 opacity-90">
+                            {% if shop_profile %}
+                                <i class="fas fa-store me-2"></i>{{ shop_profile.business_name }}
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-user me-2"></i>{{ shop_admin.user.username }}
+                            {% else %}
+                                <i class="fas fa-user me-2"></i>{{ shop_admin.user.username }}
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="d-flex gap-2 justify-content-md-end mt-3 mt-md-0">
+                    {% if shop_profile %}
+                        <a href="{{ website_url }}" target="_blank" class="btn btn-light btn-action">
+                            <i class="fas fa-external-link-alt me-2"></i> View Website
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'users:cashier_orders' %}" class="btn btn-warning btn-action">
+                        <i class="fas fa-shopping-cart me-2"></i> Manage Orders
+                        {% if pending_count > 0 %}
+                            <span class="badge bg-danger ms-2">{{ pending_count }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid px-4">
+        {% if shop_profile %}
+            <!-- Enhanced Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card stat-card h-100 metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase text-white-50 mb-2">Total Orders</h6>
+                                    <div class="h2 mb-0 fw-bold number-animate">{{ total_orders }}</div>
+                                    <small class="text-white-50">
+                                        <i class="fas fa-chart-line me-1"></i>All time
+                                    </small>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-circle p-3 stat-icon">
+                                    <i class="fas fa-shopping-bag fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card card-pending h-100 metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase text-white-50 mb-2">Pending</h6>
+                                    <div class="h2 mb-0 fw-bold number-animate">{{ pending_count }}</div>
+                                    <small class="text-white-50">
+                                        <i class="fas fa-clock me-1"></i>Need attention
+                                    </small>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-circle p-3 stat-icon">
+                                    <i class="fas fa-clock fa-2x"></i>
+                                </div>
+                            </div>
+                            {% if pending_count > 0 %}
+                                <div class="mt-3">
+                                    <span class="loading-spinner me-2"></span>
+                                    <small class="text-white-50">Active monitoring</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card card-confirmed h-100 metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase text-white-50 mb-2">Confirmed</h6>
+                                    <div class="h2 mb-0 fw-bold number-animate">{{ confirmed_count }}</div>
+                                    <small class="text-white-50">
+                                        <i class="fas fa-check-circle me-1"></i>In progress
+                                    </small>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-circle p-3 stat-icon">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card card-ready h-100 metric-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase text-white-50 mb-2">Ready</h6>
+                                    <div class="h2 mb-0 fw-bold number-animate">{{ ready_count }}</div>
+                                    <small class="text-white-50">
+                                        <i class="fas fa-truck me-1"></i>For pickup/delivery
+                                    </small>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-circle p-3 stat-icon">
+                                    <i class="fas fa-truck fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Recent Orders -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card dashboard-card metric-card">
+                        <div class="card-header bg-white py-3">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-receipt text-primary me-2"></i>
+                                        Recent Orders
+                                    </h5>
+                                </div>
+                                <div class="col-auto">
+                                    <a href="{% url 'users:cashier_orders' %}" class="btn btn-sm btn-outline-primary btn-action">
+                                        <i class="fas fa-list me-1"></i> View All Orders
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_orders %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle professional-table">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th><i class="fas fa-hashtag text-muted me-1"></i>Order #</th>
+                                                <th><i class="fas fa-user text-muted me-1"></i>Customer</th>
+                                                <th><i class="fas fa-info-circle text-muted me-1"></i>Status</th>
+                                                <th><i class="fas fa-money-bill text-muted me-1"></i>Total</th>
+                                                <th><i class="fas fa-clock text-muted me-1"></i>Time</th>
+                                                <th><i class="fas fa-cogs text-muted me-1"></i>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for order in recent_orders %}
+                                            <tr class="order-card status-{{ order.order_status|lower }}">
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="bg-light rounded-circle p-2 me-2">
+                                                            <i class="fas fa-shopping-bag text-primary"></i>
+                                                        </div>
+                                                        <div>
+                                                            <strong class="d-block">{{ order.order_number }}</strong>
+                                                            {% if order.notes %}
+                                                                <small class="text-muted">
+                                                                    <i class="fas fa-sticky-note"></i> Has notes
+                                                                </small>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-user-circle text-muted me-2"></i>
+                                                        <div>
+                                                            <div class="fw-medium">{{ order.customer_name }}</div>
+                                                            {% if order.delivery_address %}
+                                                                <small class="text-muted">
+                                                                    <i class="fas fa-map-marker-alt"></i> Delivery
+                                                                </small>
+                                                            {% else %}
+                                                                <small class="text-muted">
+                                                                    <i class="fas fa-store"></i> Pickup
+                                                                </small>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="status-indicator badge bg-{% if order.order_status == 'PENDING' %}danger{% elif order.order_status == 'CONFIRMED' %}primary{% elif order.order_status == 'PREPARING' %}warning{% elif order.order_status == 'READY' %}success{% elif order.order_status == 'COMPLETED' %}secondary{% else %}danger{% endif %}">
+                                                        <i class="fas fa-{% if order.order_status == 'PENDING' %}clock{% elif order.order_status == 'CONFIRMED' %}check{% elif order.order_status == 'PREPARING' %}utensils{% elif order.order_status == 'READY' %}truck{% elif order.order_status == 'COMPLETED' %}check-double{% else %}times{% endif %} me-1"></i>
+                                                        {{ order.get_order_status_display }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-bold text-primary">{{ currency_symbol }}{{ order.total_amount }}</div>
+                                                </td>
+                                                <td>
+                                                    <div class="text-muted">
+                                                        <i class="fas fa-calendar-alt me-1"></i>{{ order.created_at|date:"M d" }}
+                                                        <br>
+                                                        <i class="fas fa-clock me-1"></i>{{ order.created_at|date:"H:i" }}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{% url 'users:cashier_order_detail' order.pk %}" 
+                                                           class="btn btn-sm btn-outline-primary quick-action-btn" 
+                                                           title="View Details">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        {% if order.order_status != 'COMPLETED' and order.order_status != 'CANCELLED' %}
+                                                            <button type="button" 
+                                                                    class="btn btn-sm btn-success quick-action-btn" 
+                                                                    title="Quick Update"
+                                                                    onclick="quickUpdateStatus({{ order.pk }}, '{{ order.order_status }}')">
+                                                                <i class="fas fa-fast-forward"></i>
+                                                            </button>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="empty-state">
+                                    <div class="bg-light rounded-circle p-4 d-inline-block mb-3">
+                                        <i class="fas fa-shopping-cart fa-3x text-muted"></i>
+                                    </div>
+                                    <h4 class="text-muted mb-2">No orders yet</h4>
+                                    <p class="text-muted mb-4">Orders will appear here when customers place them through your website.</p>
+                                    <a href="{{ website_url }}" target="_blank" class="btn btn-primary btn-action">
+                                        <i class="fas fa-external-link-alt me-2"></i> Visit Website
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Enhanced No Website Setup -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-warning dashboard-card">
+                        <div class="card-body text-center py-5">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-4 d-inline-block mb-3">
+                                <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
+                            </div>
+                            <h4 class="text-warning mb-3">Website Not Set Up</h4>
+                            <p class="text-muted mb-4">Your shop administrator hasn't configured the website yet.</p>
+                            <div class="bg-light rounded p-3 d-inline-block">
+                                <p class="mb-2"><strong>Contact:</strong> {{ shop_admin.user.username }}</p>
+                                <p class="mb-0 text-muted">Ask them to set up the website to start receiving online orders.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Update Modal -->
+<div class="modal fade" id="quickUpdateModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Status Update</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="loading-spinner mb-3"></div>
+                <p>Updating order status...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh orders every 30 seconds with visual feedback
+let refreshInterval;
+let isRefreshing = false;
+
+function startAutoRefresh() {
+    refreshInterval = setInterval(function() {
+        if (!isRefreshing) {
+            isRefreshing = true;
+            // Show subtle loading indicator
+            document.body.style.cursor = 'wait';
+            
+            setTimeout(function() {
+                location.reload();
+            }, 500);
+        }
+    }, 30000);
+}
+
+// Quick status update function
+function quickUpdateStatus(orderId, currentStatus) {
+    const statusFlow = {
+        'PENDING': 'CONFIRMED',
+        'CONFIRMED': 'PREPARING', 
+        'PREPARING': 'READY',
+        'READY': 'COMPLETED'
+    };
+    
+    const newStatus = statusFlow[currentStatus];
+    if (!newStatus) return;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('quickUpdateModal'));
+    modal.show();
+    
+    // Submit update
+    fetch(`/users/cashier/orders/${orderId}/update/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: `status=${newStatus}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message and reload
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            modal.hide();
+            alert('Error updating order status');
+        }
+    })
+    .catch(error => {
+        modal.hide();
+        console.error('Error:', error);
+        alert('Error updating order status');
+    });
+}
+
+// Helper function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Keyboard shortcuts
+$(document).ready(function() {
+    // Start auto-refresh
+    startAutoRefresh();
+    
+    // Keyboard shortcuts
+    $(document).on('keydown', function(e) {
+        // Press 'R' to refresh
+        if (e.key === 'r' && !e.ctrlKey && !e.metaKey && !$(e.target).is('input, textarea')) {
+            e.preventDefault();
+            location.reload();
+        }
+        // Press 'O' to go to orders
+        if (e.key === 'o' && !e.ctrlKey && !e.metaKey && !$(e.target).is('input, textarea')) {
+            e.preventDefault();
+            window.location.href = '{% url "users:cashier_orders" %}';
+        }
+        // Press 'W' to open website
+        if (e.key === 'w' && !e.ctrlKey && !e.metaKey && !$(e.target).is('input, textarea')) {
+            e.preventDefault();
+            window.open('{{ website_url }}', '_blank');
+        }
+    });
+    
+    // Add hover effects to cards
+    $('.dashboard-card').hover(
+        function() { $(this).addClass('shadow-lg'); },
+        function() { $(this).removeClass('shadow-lg'); }
+    );
+    
+    // Animate numbers on load with professional counting
+    $('.stat-card .h2').each(function() {
+        const $this = $(this);
+        const countTo = parseInt($this.text());
+        $this.text('0');
+        $this.addClass('number-animate');
+        
+        $({ countNum: 0 }).animate({
+            countNum: countTo
+        }, {
+            duration: 1500,
+            easing: 'easeOutQuart',
+            step: function() {
+                const current = Math.floor(this.countNum);
+                $this.text(current.toLocaleString());
+            },
+            complete: function() {
+                $this.text(countTo.toLocaleString());
+                // Add pulse effect on completion
+                $this.addClass('animate-pulse');
+                setTimeout(() => {
+                    $this.removeClass('animate-pulse');
+                }, 500);
+            }
+        });
+    });
+    
+    // Add staggered animation to stat cards
+    $('.stat-card').each(function(index) {
+        $(this).css({
+            'animation-delay': `${index * 0.1}s`,
+            'animation-duration': '0.6s'
+        });
+    });
+    
+    // Add interactive hover effects to order rows
+    $('.order-card').hover(
+        function() {
+            $(this).find('.quick-action-btn').addClass('animate-pulse');
+        },
+        function() {
+            $(this).find('.quick-action-btn').removeClass('animate-pulse');
+        }
+    );
+    
+    // Add click feedback to buttons
+    $('.btn-action, .quick-action-btn').on('click', function() {
+        $(this).addClass('animate-pulse');
+        setTimeout(() => {
+            $(this).removeClass('animate-pulse');
+        }, 300);
+    });
+    
+    // Add notification sound effect for new orders (if available)
+    function playNotificationSound() {
+        // You can add an audio element here if you want sound notifications
+        // const audio = new Audio('/static/sounds/notification.mp3');
+        // audio.play();
+    }
+    
+    // Add visual pulse to pending orders
+    setInterval(function() {
+        $('.status-pending').each(function() {
+            $(this).addClass('animate-pulse');
+            setTimeout(() => {
+                $(this).removeClass('animate-pulse');
+            }, 1000);
+        });
+    }, 5000);
+    
+    // Add smooth scroll behavior
+    $('a[href^="#"]').on('click', function(e) {
+        e.preventDefault();
+        const target = $($(this).attr('href'));
+        if (target.length) {
+            $('html, body').animate({
+                scrollTop: target.offset().top - 100
+            }, 500);
+        }
+    });
+    
+    // Add loading state to buttons during AJAX requests
+    $(document).ajaxStart(function() {
+        $('.btn-action').prop('disabled', true).addClass('opacity-75');
+    });
+    
+    $(document).ajaxStop(function() {
+        $('.btn-action').prop('disabled', false).removeClass('opacity-75');
+    });
+    
+    // Add tooltip functionality
+    $('[title]').each(function() {
+        $(this).attr('data-bs-toggle', 'tooltip');
+    });
+    
+    // Initialize tooltips if Bootstrap is available
+    if (typeof bootstrap !== 'undefined') {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+    
+    // Add professional loading overlay
+    function showLoadingOverlay() {
+        if (!$('#loadingOverlay').length) {
+            $('body').append(`
+                <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+                    <div class="bg-white rounded-lg p-6 flex flex-col items-center">
+                        <div class="loading-spinner mb-4"></div>
+                        <p class="text-gray-700 font-medium">Loading...</p>
+                    </div>
+                </div>
+            `);
+        }
+        $('#loadingOverlay').fadeIn(200);
+    }
+    
+    function hideLoadingOverlay() {
+        $('#loadingOverlay').fadeOut(200);
+    }
+    
+    // Add professional notification system
+    function showNotification(message, type = 'info') {
+        const notification = $(`
+            <div class="fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300" 
+                 style="background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'}; color: white;">
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-3"></i>
+                    <span>${message}</span>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(notification);
+        
+        setTimeout(() => {
+            notification.removeClass('translate-x-full');
+        }, 100);
+        
+        setTimeout(() => {
+            notification.addClass('translate-x-full');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 3000);
+    }
+    
+    // Make functions globally available
+    window.showLoadingOverlay = showLoadingOverlay;
+    window.hideLoadingOverlay = hideLoadingOverlay;
+    window.showNotification = showNotification;
+});
+
+// Clean up interval on page unload
+$(window).on('beforeunload', function() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+});
+</script>
+{% endblock %}
