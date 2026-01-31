@@ -2,62 +2,338 @@
 
 {% block title %}{{ shop_profile.business_name }} - Home{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Hero Section Styles */
+    .hero-section {
+        background: linear-gradient(135deg, var(--primary-color), #1e40af);
+        color: white;
+        padding: 5rem 0;
+        position: relative;
+        overflow: hidden;
+        border-radius: 0 0 30px 30px;
+        margin-bottom: 4rem;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .hero-description {
+        font-size: 1.25rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+        line-height: 1.6;
+    }
+
+    .hero-image {
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        transition: var(--transition);
+    }
+
+    .hero-image:hover {
+        transform: translateY(-10px) scale(1.05);
+    }
+
+    /* Section Headers */
+    .section-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        position: relative;
+    }
+
+    .section-header h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: 1rem;
+    }
+
+    .section-header::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        border-radius: 2px;
+    }
+
+    /* Product Cards Enhancement */
+    .product-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border: none;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .product-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        transform: scaleX(0);
+        transition: var(--transition);
+    }
+
+    .product-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .product-card:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    .product-image {
+        height: 250px;
+        object-fit: cover;
+        transition: var(--transition);
+    }
+
+    .product-card:hover .product-image {
+        transform: scale(1.1);
+    }
+
+    .product-body {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .product-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+    }
+
+    .product-description {
+        color: var(--secondary-color);
+        margin-bottom: 1rem;
+        flex-grow: 1;
+    }
+
+    .price-section {
+        margin-bottom: 1rem;
+    }
+
+    .original-price {
+        text-decoration: line-through;
+        color: #9ca3af;
+        font-size: 0.875rem;
+    }
+
+    .current-price {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .stock-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .in-stock {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success-color);
+    }
+
+    .out-of-stock {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color);
+    }
+
+    /* Call to Action Section */
+    .cta-section {
+        background: linear-gradient(135deg, var(--light-color), #e2e8f0);
+        padding: 4rem 2rem;
+        border-radius: 20px;
+        text-align: center;
+        margin: 4rem 0;
+        border: 2px dashed rgba(37, 99, 235, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.05), transparent);
+        animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
+
+    .cta-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: 1rem;
+    }
+
+    .cta-description {
+        font-size: 1.125rem;
+        color: var(--secondary-color);
+        margin-bottom: 2rem;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        
+        .hero-description {
+            font-size: 1rem;
+        }
+        
+        .section-header h2 {
+            font-size: 2rem;
+        }
+        
+        .product-image {
+            height: 200px;
+        }
+        
+        .cta-section {
+            padding: 2rem 1rem;
+            margin: 2rem 0;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <!-- Hero Section -->
-    <div class="jumbotron bg-primary text-white p-5 rounded mb-5">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h1 class="display-4">{{ shop_profile.business_name }}</h1>
-                <p class="lead">{{ shop_profile.business_description }}</p>
-                <a href="{% url 'shop_website:shop_products' shop_profile.user_profile.user.username %}" class="btn btn-light btn-lg">
-                    <i class="fas fa-shopping-bag me-2"></i>Shop Now
-                </a>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <h1 class="hero-title fade-in-up">{{ shop_profile.business_name }}</h1>
+                    <p class="hero-description fade-in-up">{{ shop_profile.business_description }}</p>
+                    <div class="fade-in-up">
+                        <a href="{% url 'shop_website:shop_products' shop_profile.user_profile.user.username %}" class="btn btn-modern btn-lg">
+                            <i class="fas fa-shopping-bag me-2"></i>Shop Now
+                        </a>
+                    </div>
+                </div>
+                {% if shop_profile.logo %}
+                <div class="col-lg-5 text-center fade-in-up">
+                    <img src="{{ shop_profile.logo.url }}" alt="{{ shop_profile.business_name }}" class="img-fluid hero-image">
+                </div>
+                {% endif %}
             </div>
-            {% if shop_profile.logo %}
-            <div class="col-md-4 text-center">
-                <img src="{{ shop_profile.logo.url }}" alt="{{ shop_profile.business_name }}" class="img-fluid rounded">
-            </div>
-            {% endif %}
         </div>
     </div>
+</section>
 
+<div class="container">
     <!-- Featured Products -->
     {% if featured_products %}
     <section class="mb-5">
-        <h2 class="text-center mb-4">Featured Products</h2>
+        <div class="section-header">
+            <h2>Featured Products</h2>
+            <p class="text-muted">Discover our handpicked selection of premium products</p>
+        </div>
         <div class="row">
             {% for product in featured_products %}
-            <div class="col-md-4 mb-4">
-                <div class="card product-card h-100">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="product-card">
                     {% if product.discount_percentage > 0 %}
                     <div class="discount-badge">-{{ product.discount_percentage }}%</div>
                     {% endif %}
-                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ product.name }}</h5>
-                        <p class="card-text">{{ product.description|truncatewords:15 }}</p>
-                        <div class="mt-auto">
-                            <div class="mb-2">
-                                {% if product.original_price %}
-                                <span class="text-muted text-decoration-line-through">KES {{ product.original_price }}</span>
-                                <span class="fw-bold text-primary">KES {{ product.price }}</span>
+                    <img src="{{ product.image.url }}" class="product-image" alt="{{ product.name }}">
+                    <div class="product-body">
+                        <h5 class="product-title">{{ product.name }}</h5>
+                        <p class="product-description">{{ product.description|truncatewords:15 }}</p>
+                        <div class="price-section">
+                            {% if product.original_price %}
+                            <div>
+                                <span class="original-price">KES {{ product.original_price }}</span>
+                                <span class="current-price">KES {{ product.price }}</span>
+                            </div>
+                            {% else %}
+                            <div class="current-price">KES {{ product.price }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="stock-indicator {% if product.is_in_stock %}in-stock{% else %}out-of-stock{% endif %}">
+                                {% if product.is_in_stock %}
+                                    <i class="fas fa-check-circle me-1"></i> In Stock ({{ product.stock_quantity }})
                                 {% else %}
-                                <span class="fw-bold text-primary">KES {{ product.price }}</span>
+                                    <i class="fas fa-times-circle me-1"></i> Out of Stock
                                 {% endif %}
                             </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted {% if not product.is_in_stock %}text-danger{% endif %}">
-                                    {% if product.is_in_stock %}
-                                        <i class="fas fa-check-circle text-success"></i> In Stock ({{ product.stock_quantity }})
-                                    {% else %}
-                                        <i class="fas fa-times-circle"></i> Out of Stock
-                                    {% endif %}
-                                </small>
-                                <a href="{% url 'shop_website:product_detail' shop_profile.user_profile.user.username product.id %}" class="btn btn-outline-primary btn-sm">
-                                    View Details
-                                </a>
-                            </div>
+                            <a href="{% url 'shop_website:product_detail' shop_profile.user_profile.user.username product.id %}" class="btn btn-outline-primary btn-sm">
+                                View Details
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -70,39 +346,42 @@
     <!-- Recent Products -->
     {% if recent_products %}
     <section>
-        <h2 class="text-center mb-4">Recent Products</h2>
+        <div class="section-header">
+            <h2>Recent Products</h2>
+            <p class="text-muted">Fresh arrivals and latest additions to our store</p>
+        </div>
         <div class="row">
             {% for product in recent_products %}
-            <div class="col-md-3 mb-4">
-                <div class="card product-card h-100">
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="product-card">
                     {% if product.discount_percentage > 0 %}
                     <div class="discount-badge">-{{ product.discount_percentage }}%</div>
                     {% endif %}
-                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 150px; object-fit: cover;">
-                    <div class="card-body d-flex flex-column">
-                        <h6 class="card-title">{{ product.name }}</h6>
-                        <p class="card-text small">{{ product.description|truncatewords:10 }}</p>
-                        <div class="mt-auto">
-                            <div class="mb-2">
-                                {% if product.original_price %}
-                                <span class="text-muted text-decoration-line-through small">KES {{ product.original_price }}</span>
-                                <span class="fw-bold text-primary">KES {{ product.price }}</span>
+                    <img src="{{ product.image.url }}" class="product-image" alt="{{ product.name }}">
+                    <div class="product-body">
+                        <h6 class="product-title">{{ product.name }}</h6>
+                        <p class="product-description small">{{ product.description|truncatewords:10 }}</p>
+                        <div class="price-section">
+                            {% if product.original_price %}
+                            <div>
+                                <span class="original-price small">KES {{ product.original_price }}</span>
+                                <span class="current-price">KES {{ product.price }}</span>
+                            </div>
+                            {% else %}
+                            <div class="current-price">KES {{ product.price }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="stock-indicator {% if product.is_in_stock %}in-stock{% else %}out-of-stock{% endif %}">
+                                {% if product.is_in_stock %}
+                                    <i class="fas fa-check-circle me-1"></i> In Stock
                                 {% else %}
-                                <span class="fw-bold text-primary">KES {{ product.price }}</span>
+                                    <i class="fas fa-times-circle me-1"></i> Out of Stock
                                 {% endif %}
                             </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted {% if not product.is_in_stock %}text-danger{% endif %}">
-                                    {% if product.is_in_stock %}
-                                        <i class="fas fa-check-circle text-success"></i> In Stock
-                                    {% else %}
-                                        <i class="fas fa-times-circle"></i> Out of Stock
-                                    {% endif %}
-                                </small>
-                                <a href="{% url 'shop_website:product_detail' shop_profile.user_profile.user.username product.id %}" class="btn btn-outline-primary btn-sm">
-                                    View
-                                </a>
-                            </div>
+                            <a href="{% url 'shop_website:product_detail' shop_profile.user_profile.user.username product.id %}" class="btn btn-outline-primary btn-sm">
+                                View
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -113,12 +392,49 @@
     {% endif %}
 
     <!-- Call to Action -->
-    <div class="text-center mt-5 p-4 bg-light rounded">
-        <h3>Looking for something specific?</h3>
-        <p class="lead">Browse our complete collection of quality products</p>
-        <a href="{% url 'shop_website:shop_products' shop_profile.user_profile.user.username %}" class="btn btn-primary btn-lg">
-            <i class="fas fa-th me-2"></i>View All Products
-        </a>
+    <div class="cta-section">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h3 class="cta-title">Looking for something specific?</h3>
+                <p class="cta-description">Browse our complete collection of quality products</p>
+                <a href="{% url 'shop_website:shop_products' shop_profile.user_profile.user.username %}" class="btn btn-modern btn-lg">
+                    <i class="fas fa-th me-2"></i>View All Products
+                </a>
+            </div>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add staggered animation to hero elements
+    const heroElements = document.querySelectorAll('.fade-in-up');
+    heroElements.forEach((el, index) => {
+        el.style.animationDelay = `${index * 0.2}s`;
+    });
+    
+    // Add parallax effect to hero section
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        const heroSection = document.querySelector('.hero-section');
+        if (heroSection) {
+            heroSection.style.transform = `translateY(${scrolled * 0.5}px)`;
+        }
+    });
+    
+    // Add hover effect to product cards
+    const productCards = document.querySelectorAll('.product-card');
+    productCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-12px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+});
+</script>
 {% endblock %}
