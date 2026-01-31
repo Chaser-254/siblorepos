@@ -218,15 +218,16 @@ document.addEventListener('click', function(e) {
 // Add to cart function
 function addToCart(id, name, price, stock) {
     const existingItem = cart.find(item => item.id === id);
+    const stockInt = parseInt(stock);
     
     if (existingItem) {
-        if (existingItem.quantity >= stock) {
-            alert(`Only ${stock} units available in stock!`);
+        if (existingItem.quantity >= stockInt) {
+            alert(`Only ${stockInt} units available in stock!`);
             return;
         }
         existingItem.quantity++;
     } else {
-        cart.push({ id, name, price, quantity: 1, stock });
+        cart.push({ id, name, price, quantity: 1, stock: stockInt });
     }
     
     updateCart();
@@ -269,13 +270,14 @@ function updateQuantity(id, change) {
     const item = cart.find(item => item.id === id);
     if (item) {
         const newQuantity = item.quantity + change;
+        const stock = parseInt(item.stock);
         if (newQuantity <= 0) {
             removeFromCart(id);
-        } else if (newQuantity <= item.stock) {
+        } else if (newQuantity <= stock) {
             item.quantity = newQuantity;
             updateCart();
         } else {
-            alert(`Only ${item.stock} units available in stock!`);
+            alert(`Only ${stock} units available in stock!`);
         }
     }
 }

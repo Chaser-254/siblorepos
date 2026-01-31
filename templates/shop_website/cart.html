@@ -107,7 +107,10 @@ function updateQuantity(itemId, newQuantity) {
     .then(data => {
         if (data.success) {
             // Update quantity input
-            document.getElementById(`quantity-${itemId}`).value = newQuantity;
+            const quantityInput = document.getElementById(`quantity-${itemId}`);
+            if (quantityInput) {
+                quantityInput.value = newQuantity;
+            }
             
             // Update cart badge
             const cartBadge = document.querySelector('.cart-badge');
@@ -120,8 +123,12 @@ function updateQuantity(itemId, newQuantity) {
             
             // Update item subtotal
             const itemRow = document.getElementById(`cart-item-${itemId}`);
-            const subtotalCell = itemRow.querySelector('.col-md-4:nth-child(4) strong');
-            subtotalCell.textContent = `KES ${data.item_subtotal}`;
+            if (itemRow) {
+                const subtotalCell = itemRow.querySelector('.col-md-2:nth-child(5) strong');
+                if (subtotalCell) {
+                    subtotalCell.textContent = `KES ${data.item_subtotal}`;
+                }
+            }
             
             // Update cart total
             const totalElements = document.querySelectorAll('.text-primary');
@@ -139,12 +146,12 @@ function updateQuantity(itemId, newQuantity) {
                 }
             }
         } else {
-            alert(data.error);
+            alert(data.error || 'Failed to update cart');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred. Please try again.');
+        alert('An error occurred while updating the cart. Please try again.');
     });
 }
 
