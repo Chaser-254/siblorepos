@@ -1,0 +1,767 @@
+{% extends 'shop_website/base.html' %}
+{% load static %}
+
+{% block title %}Manage Orders - {{ shop_profile.business_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .orders-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: var(--border-radius);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .orders-header {
+        background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+        color: white;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .orders-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="10" cy="50" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="90" cy="50" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="50" cy="90" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+    }
+
+    .orders-header h1 {
+        font-weight: 700;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .orders-stats {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+
+    .filter-section {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .filter-form {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-select {
+        background: white;
+        border: 2px solid rgba(37, 99, 235, 0.1);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-weight: 500;
+        transition: var(--transition);
+        min-width: 200px;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .btn-filter {
+        background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-filter:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-clear {
+        background: transparent;
+        color: var(--secondary-color);
+        border: 2px solid rgba(100, 116, 139, 0.2);
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-clear:hover {
+        background: rgba(100, 116, 139, 0.1);
+        border-color: rgba(100, 116, 139, 0.3);
+        color: var(--dark-color);
+        text-decoration: none;
+    }
+
+    .orders-table {
+        background: white;
+    }
+
+    .table-modern {
+        margin: 0;
+    }
+
+    .table-modern thead {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    }
+
+    .table-modern th {
+        font-weight: 600;
+        color: var(--dark-color);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 1rem 1.5rem;
+        border: none;
+    }
+
+    .table-modern tbody tr {
+        transition: var(--transition);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .table-modern tbody tr:hover {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.02), rgba(37, 99, 235, 0.05));
+        transform: scale(1.01);
+    }
+
+    .table-modern td {
+        padding: 1.25rem 1.5rem;
+        vertical-align: middle;
+        border: none;
+    }
+
+    .order-number {
+        font-weight: 700;
+        color: var(--primary-color);
+        font-size: 1.1rem;
+    }
+
+    .customer-info {
+        font-weight: 500;
+        color: var(--dark-color);
+    }
+
+    .customer-email {
+        font-size: 0.875rem;
+        color: var(--secondary-color);
+        margin-top: 0.25rem;
+    }
+
+    .order-date {
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+    }
+
+    .order-amount {
+        font-weight: 600;
+        color: var(--success-color);
+        font-size: 1.1rem;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .status-pending {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+        color: #d97706;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .status-confirmed {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(37, 99, 235, 0.05));
+        color: #2563eb;
+        border: 1px solid rgba(37, 99, 235, 0.2);
+    }
+
+    .status-processing {
+        background: linear-gradient(135deg, rgba(147, 51, 234, 0.1), rgba(147, 51, 234, 0.05));
+        color: #9333ea;
+        border: 1px solid rgba(147, 51, 234, 0.2);
+    }
+
+    .status-shipped {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05));
+        color: #6366f1;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .status-in_transit {
+        background: linear-gradient(135deg, rgba(251, 146, 60, 0.1), rgba(251, 146, 60, 0.05));
+        color: #fb923c;
+        border: 1px solid rgba(251, 146, 60, 0.2);
+    }
+
+    .status-delivered {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-signed {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .status-cancelled {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .status-select {
+        background: white;
+        border: 2px solid rgba(37, 99, 235, 0.1);
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: var(--transition);
+        min-width: 140px;
+    }
+
+    .status-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .btn-update {
+        background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        transition: var(--transition);
+        margin-left: 0.5rem;
+    }
+
+    .btn-update:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-radius: var(--border-radius);
+        margin: 2rem 0;
+    }
+
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(37, 99, 235, 0.05));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2rem;
+        color: var(--primary-color);
+    }
+
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-description {
+        color: var(--secondary-color);
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+    }
+
+    .btn-back {
+        background: linear-gradient(135deg, var(--secondary-color), #475569);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(100, 116, 139, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .navigation-section {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .orders-header h1 {
+            font-size: 1.75rem;
+        }
+
+        .orders-stats {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .filter-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-select {
+            min-width: 100%;
+        }
+
+        .table-modern {
+            font-size: 0.875rem;
+        }
+
+        .table-modern th,
+        .table-modern td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .status-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .btn-update {
+            margin-left: 0;
+            min-width: 100px;
+        }
+
+        .signature-section {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .signature-canvas {
+            border: 2px dashed rgba(37, 99, 235, 0.3);
+            border-radius: 8px;
+            background: white;
+            cursor: crosshair;
+            display: block;
+            margin: 1rem 0;
+            touch-action: none;
+        }
+
+        .signature-controls {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .btn-signature {
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .btn-signature:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-clear-signature {
+            background: linear-gradient(135deg, var(--danger-color), #dc2626);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .btn-clear-signature:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .signature-preview {
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .signature-preview img {
+            max-width: 200px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            padding: 0.5rem;
+            background: white;
+        }
+
+        .signature-label {
+            font-size: 0.875rem;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="orders-container">
+        <!-- Header Section -->
+        <div class="orders-header">
+            <h1><i class="fas fa-shopping-cart me-3"></i>Manage Orders</h1>
+            <div class="orders-stats">
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">{{ orders.count }}</div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
+                </div>
+                {% if current_status %}
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-filter"></i>
+                        </div>
+                        <div>
+                            <div class="stat-value">{{ orders.count }}</div>
+                            <div class="stat-label">{{ current_status|title }} Orders</div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <form method="get" class="filter-form">
+                <label for="status" class="text-sm font-medium text-gray-700 d-flex align-items-center">
+                    <i class="fas fa-filter me-2"></i>Filter by Status:
+                </label>
+                <select name="status" id="status" class="filter-select">
+                    <option value="">All Orders</option>
+                    {% for status_value, status_label in status_choices %}
+                        <option value="{{ status_value }}" {% if current_status == status_value %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-search"></i>
+                    Filter
+                </button>
+                {% if current_status %}
+                    <a href="{% url 'shop_website:manage_orders' %}" class="btn-clear">
+                        <i class="fas fa-times"></i>
+                        Clear Filter
+                    </a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="orders-table">
+            {% if orders %}
+                <div class="table-responsive">
+                    <table class="table table-modern">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-hashtag me-2"></i>Order Number</th>
+                                <th><i class="fas fa-user me-2"></i>Customer</th>
+                                <th><i class="fas fa-calendar me-2"></i>Date</th>
+                                <th><i class="fas fa-money-bill-wave me-2"></i>Total</th>
+                                <th><i class="fas fa-info-circle me-2"></i>Status</th>
+                                <th><i class="fas fa-cog me-2"></i>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                                <tr>
+                                    <td>
+                                        <span class="order-number">#{{ order.order_number }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="customer-info">{{ order.customer_name }}</div>
+                                        {% if order.customer_email %}
+                                            <div class="customer-email">{{ order.customer_email }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="order-date">{{ order.created_at|date:"M d, Y H:i" }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="order-amount">Ksh {{ order.total_amount|floatformat:2 }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge status-{{ order.order_status|lower }}">
+                                            <i class="fas fa-{% if order.order_status == 'pending' %}clock{% elif order.order_status == 'confirmed' %}check-circle{% elif order.order_status == 'processing' %}cog{% elif order.order_status == 'shipped' %}truck{% elif order.order_status == 'in_transit' %}shipping-fast{% elif order.order_status == 'delivered' %}check-double{% elif order.order_status == 'signed' %}signature{% elif order.order_status == 'cancelled' %}times-circle{% else %}question-circle{% endif %}"></i>
+                                            {{ order.get_order_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form method="post" action="{% url 'shop_website:update_order_status' order.id %}" class="status-form d-inline">
+                                            {% csrf_token %}
+                                            <div class="d-flex align-items-center gap-2">
+                                                <select name="order_status" class="status-select" id="status-select-{{ order.id }}">
+                                                    {% for status_value, status_label in status_choices %}
+                                                        <option value="{{ status_value }}" {% if order.order_status == status_value %}selected{% endif %}>
+                                                            {{ status_label }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                                <button type="submit" class="btn-update">
+                                                    <i class="fas fa-sync-alt"></i>
+                                                    Update
+                                                </button>
+                                            </div>
+                                        </form>
+                                        
+                                        <!-- Signature Section -->
+                                        {% if order.order_status == 'delivered' or order.order_status == 'SIGNED' %}
+                                            <div class="signature-section" id="signature-section-{{ order.id }}">
+                                                <div class="signature-label">Customer Signature Required:</div>
+                                                {% if order.customer_signature %}
+                                                    <div class="signature-preview">
+                                                        <img src="{{ order.customer_signature.url }}" alt="Customer Signature">
+                                                        <div class="text-success mt-2">
+                                                            <i class="fas fa-check-circle"></i> Signed on {{ order.signed_at|date:"M d, Y H:i" }}
+                                                        </div>
+                                                    </div>
+                                                {% else %}
+                                                    <canvas class="signature-canvas" id="signature-canvas-{{ order.id }}" width="300" height="150"></canvas>
+                                                    <div class="signature-controls">
+                                                        <button type="button" class="btn-clear-signature" onclick="clearSignature({{ order.id }})">
+                                                            <i class="fas fa-eraser"></i> Clear
+                                                        </button>
+                                                        <button type="button" class="btn-signature" onclick="saveSignature({{ order.id }})">
+                                                            <i class="fas fa-save"></i> Save Signature
+                                                        </button>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <h3 class="empty-title">No orders found</h3>
+                    <p class="empty-description">
+                        {% if current_status %}
+                            No orders with status "{{ current_status }}" found.
+                        {% else %}
+                            You haven't received any orders yet.
+                        {% endif %}
+                    </p>
+                    {% if current_status %}
+                        <a href="{% url 'shop_website:manage_orders' %}" class="btn-back">
+                            <i class="fas fa-arrow-left"></i>
+                            View All Orders
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="navigation-section">
+        <a href="{% url 'users:shop_admin_dashboard' %}" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Signature Pad JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script>
+// Store signature pads for each order
+const signaturePads = {};
+const ordersData = {{ orders_json|safe }};
+
+// Initialize signature pads
+document.addEventListener('DOMContentLoaded', function() {
+    ordersData.forEach(function(order) {
+        if (!order.customer_signature && (order.order_status === 'delivered' || order.order_status === 'SIGNED')) {
+            const canvas = document.getElementById('signature-canvas-' + order.id);
+            if (canvas) {
+                signaturePads[order.id] = new SignaturePad(canvas, {
+                    backgroundColor: 'rgb(255, 255, 255)',
+                    penColor: 'rgb(0, 0, 0)'
+                });
+                
+                // Resize canvas to match display size
+                function resizeCanvas() {
+                    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                    canvas.width = canvas.offsetWidth * ratio;
+                    canvas.height = canvas.offsetHeight * ratio;
+                    canvas.getContext('2d').scale(ratio, ratio);
+                    signaturePads[order.id].clear();
+                }
+                
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+            }
+        }
+    });
+});
+
+// Clear signature function
+function clearSignature(orderId) {
+    if (signaturePads[orderId]) {
+        signaturePads[orderId].clear();
+    }
+}
+
+// Save signature function
+function saveSignature(orderId) {
+    if (!signaturePads[orderId] || signaturePads[orderId].isEmpty()) {
+        alert('Please provide a signature first.');
+        return;
+    }
+    
+    const canvas = document.getElementById('signature-canvas-' + orderId);
+    const dataURL = canvas.toDataURL('image/png');
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('signature', dataURL);
+    formData.append('order_id', orderId);
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (csrfToken) {
+        formData.append('csrfmiddlewaretoken', csrfToken.value);
+    }
+    
+    // Send signature to server
+    fetch('{% url "shop_website:save_signature" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': csrfToken ? csrfToken.value : ''
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload the page to show the saved signature
+            window.location.reload();
+        } else {
+            alert('Error saving signature: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving signature. Please try again.');
+    });
+}
+
+// Show/hide signature section based on status change
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.id && e.target.id.startsWith('status-select-')) {
+        const orderId = e.target.id.replace('status-select-', '');
+        const signatureSection = document.getElementById('signature-section-' + orderId);
+        
+        if (signatureSection) {
+            if (e.target.value === 'delivered' || e.target.value === 'SIGNED') {
+                signatureSection.style.display = 'block';
+            } else {
+                signatureSection.style.display = 'none';
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

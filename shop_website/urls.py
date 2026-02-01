@@ -30,4 +30,5 @@ urlpatterns = [
     path('shop/admin/products/<int:product_id>/delete/', admin_views.delete_product, name='delete_product'),
     path('shop/admin/orders/', admin_views.manage_orders, name='manage_orders'),
     path('shop/admin/orders/<int:order_id>/status/', admin_views.update_order_status, name='update_order_status'),
+    path('shop/admin/save-signature/', admin_views.save_signature, name='save_signature'),
 ]

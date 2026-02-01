@@ -2,8 +2,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.validators import MinValueValidator
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from decimal import Decimal
-from .models import ShopProfile, ShopProduct
+import base64
+import io
+import json
+from PIL import Image
+from django.core.files.base import ContentFile
+from django.utils import timezone
+from .models import ShopProfile, ShopProduct, Order
 from users.decorators import get_user_profile
 
 
@@ -271,10 +280,20 @@ def manage_orders(request):
     if status_filter:
         orders = orders.filter(order_status=status_filter)
     
+    # Prepare orders data for JavaScript
+    orders_data = []
+    for order in orders:
+        orders_data.append({
+            'id': order.id,
+            'order_status': order.order_status,
+            'customer_signature': bool(order.customer_signature)
+        })
+    
     return render(request, 'shop_website/manage_orders.html', {
         'shop_profile': shop_profile,
         'orders': orders,
-        'status_choices': ShopProduct._meta.get_field('is_available').choices,
+        'orders_json': json.dumps(orders_data),
+        'status_choices': Order.ORDER_STATUS_CHOICES,
         'current_status': status_filter
     })
 
@@ -290,17 +309,70 @@ def update_order_status(request, order_id):
     try:
         shop_profile = profile.shop_website
         order = shop_profile.orders.get(id=order_id)
-    except (ShopProfile.DoesNotExist, ShopProduct.DoesNotExist):
+    except (ShopProfile.DoesNotExist, Order.DoesNotExist):
         messages.error(request, 'Order not found.')
         return redirect('shop_website:manage_orders')
     
     if request.method == 'POST':
         new_status = request.POST.get('order_status')
+        
+        # Debug: Print the received status and available choices
+        print(f"Received status: {new_status}")
+        print(f"Available choices: {dict(order.ORDER_STATUS_CHOICES).keys()}")
+        
         if new_status in dict(order.ORDER_STATUS_CHOICES).keys():
             order.order_status = new_status
             order.save()
             messages.success(request, f'Order {order.order_number} status updated to {order.get_order_status_display()}.')
         else:
-            messages.error(request, 'Invalid status selected.')
+            messages.error(request, f'Invalid status selected. Received: {new_status}')
     
     return redirect('shop_website:manage_orders')
+
+
+@csrf_exempt
+@require_POST
+@login_required
+def save_signature(request):
+    """Save customer signature for an order"""
+    try:
+        order_id = request.POST.get('order_id')
+        signature_data = request.POST.get('signature')
+        
+        if not order_id or not signature_data:
+            return JsonResponse({'success': False, 'error': 'Missing required data'})
+        
+        # Get user profile and verify shop admin
+        profile = get_user_profile(request.user)
+        if not profile.is_shop_admin:
+            return JsonResponse({'success': False, 'error': 'Access denied'})
+        
+        # Get order
+        order = get_object_or_404(Order, id=order_id, shop_profile__user_profile=profile)
+        
+        # Process base64 signature data
+        format, imgstr = signature_data.split(';base64,')
+        ext = format.split('/')[-1]
+        
+        # Convert base64 to image
+        img_data = base64.b64decode(imgstr)
+        image = Image.open(io.BytesIO(img_data))
+        
+        # Save to file
+        image_io = io.BytesIO()
+        image.save(image_io, format='PNG')
+        image_io.seek(0)
+        
+        # Create filename
+        filename = f'signature_order_{order.order_number}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.png'
+        
+        # Save signature
+        order.customer_signature.save(filename, ContentFile(image_io.read()), save=True)
+        order.signed_at = timezone.now()
+        order.order_status = 'SIGNED'
+        order.save()
+        
+        return JsonResponse({'success': True, 'message': 'Signature saved successfully'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

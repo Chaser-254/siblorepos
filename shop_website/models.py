@@ -126,9 +126,11 @@ class Order(models.Model):
     ORDER_STATUS_CHOICES = [
         ('PENDING', 'Pending'),
         ('CONFIRMED', 'Confirmed'),
-        ('PREPARING', 'Preparing'),
-        ('READY', 'Ready for Pickup/Delivery'),
-        ('COMPLETED', 'Completed'),
+        ('PROCESSING', 'Processing'),
+        ('SHIPPED', 'Shipped'),
+        ('IN_TRANSIT', 'In Transit'),
+        ('DELIVERED', 'Delivered'),
+        ('SIGNED', 'Signed'),
         ('CANCELLED', 'Cancelled'),
     ]
     
@@ -151,6 +153,8 @@ class Order(models.Model):
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    customer_signature = models.ImageField(upload_to='signatures/', blank=True, null=True, help_text="Customer signature for delivered orders")
+    signed_at = models.DateTimeField(null=True, blank=True, help_text="Timestamp when order was signed")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
