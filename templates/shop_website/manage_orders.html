@@ -601,7 +601,7 @@
                                         </form>
                                         
                                         <!-- Signature Section -->
-                                        {% if order.order_status == 'delivered' or order.order_status == 'SIGNED' %}
+                                        {% if order.order_status == 'DELIVERED' or order.order_status == 'SIGNED' %}
                                             <div class="signature-section" id="signature-section-{{ order.id }}">
                                                 <div class="signature-label">Customer Signature Required:</div>
                                                 {% if order.customer_signature %}
@@ -673,7 +673,7 @@ const ordersData = {{ orders_json|safe }};
 // Initialize signature pads
 document.addEventListener('DOMContentLoaded', function() {
     ordersData.forEach(function(order) {
-        if (!order.customer_signature && (order.order_status === 'delivered' || order.order_status === 'SIGNED')) {
+        if (!order.customer_signature && (order.order_status === 'DELIVERED' || order.order_status === 'SIGNED')) {
             const canvas = document.getElementById('signature-canvas-' + order.id);
             if (canvas) {
                 signaturePads[order.id] = new SignaturePad(canvas, {
@@ -755,7 +755,7 @@ document.addEventListener('change', function(e) {
         const signatureSection = document.getElementById('signature-section-' + orderId);
         
         if (signatureSection) {
-            if (e.target.value === 'delivered' || e.target.value === 'SIGNED') {
+            if (e.target.value === 'DELIVERED' || e.target.value === 'SIGNED') {
                 signatureSection.style.display = 'block';
             } else {
                 signatureSection.style.display = 'none';

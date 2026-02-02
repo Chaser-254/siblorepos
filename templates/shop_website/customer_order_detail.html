@@ -1,0 +1,532 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order {{ order.order_number }} - Customer Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Customer Order Detail Styling */
+.customer-portal {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.detail-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.detail-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.detail-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2.5rem;
+    position: relative;
+}
+
+.detail-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="10" cy="50" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="90" cy="50" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="50" cy="90" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.detail-header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+}
+
+.detail-header p {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+    font-size: 1.2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.detail-body {
+    padding: 2.5rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 3px solid #667eea;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.info-item {
+    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+    padding: 1.5rem;
+    border-radius: 15px;
+    border-left: 4px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+.info-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+}
+
+.info-item h6 {
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.info-item p {
+    color: #2c3e50;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.status-badge {
+    font-size: 1rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.order-item {
+    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+.order-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+}
+
+.signature-section {
+    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+    border: 2px solid #667eea;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: 2rem;
+}
+
+.signature-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+}
+
+.signature-header h5 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.signature-body {
+    padding: 2rem;
+}
+
+#signature-canvas {
+    border: 2px dashed #667eea;
+    border-radius: 15px;
+    background: white;
+    box-shadow: inset 0 3px 8px rgba(0,0,0,0.08);
+    width: 100%;
+    max-width: 600px;
+    height: 200px;
+    touch-action: none;
+    cursor: crosshair;
+}
+
+.signature-controls {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-signature {
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-clear {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-clear:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-save:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.signature-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+    padding: 1.5rem;
+    border-radius: 15px;
+    text-align: center;
+    border-left: 4px solid #28a745;
+}
+
+.signature-success img {
+    max-width: 400px;
+    border: 2px solid #28a745;
+    border-radius: 10px;
+    margin: 1rem 0;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #e8f4fd 0%, #d1ecf1 100%);
+    color: #0c5460;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #17a2b8;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.back-link:hover {
+    color: #5a6fd8;
+    transform: translateX(-5px);
+}
+
+@media (max-width: 768px) {
+    .detail-header {
+        padding: 2rem 1.5rem;
+    }
+    
+    .detail-header h1 {
+        font-size: 2rem;
+    }
+    
+    .detail-body {
+        padding: 2rem 1.5rem;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .signature-controls {
+        flex-direction: column;
+    }
+    
+    .btn-signature {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="customer-portal">
+    <div class="detail-container">
+        <a href="{% url 'shop_website:customer_order_lookup' %}" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Back to Order Lookup
+        </a>
+
+        <div class="detail-card">
+            <div class="detail-header">
+                <h1><i class="fas fa-shopping-cart me-3"></i>Order Details</h1>
+                <p><i class="fas fa-receipt me-2"></i>Order #{{ order.order_number }}</p>
+            </div>
+            
+            <div class="detail-body">
+                <!-- Order Status -->
+                <div class="mb-4">
+                    <h5 class="section-title"><i class="fas fa-info-circle me-2"></i>Order Information</h5>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <h6>Order Status</h6>
+                            <p>
+                                <span class="status-badge" style="background: {% if order.order_status == 'PENDING' %}#fff3cd; color: #856404{% elif order.order_status == 'CONFIRMED' %}#cce5ff; color: #004085{% elif order.order_status == 'PROCESSING' %}#fff3cd; color: #856404{% elif order.order_status == 'IN_TRANSIT' %}#e2e3e5; color: #383d41{% elif order.order_status == 'DELIVERED' %}#d4edda; color: #155724{% elif order.order_status == 'SIGNED' %}#d1ecf1; color: #0c5460{% else %}#f8d7da; color: #721c24{% endif %};">
+                                    {% if order.order_status == 'PENDING' %}<i class="fas fa-clock"></i>{% elif order.order_status == 'CONFIRMED' %}<i class="fas fa-check-circle"></i>{% elif order.order_status == 'PROCESSING' %}<i class="fas fa-cog"></i>{% elif order.order_status == 'IN_TRANSIT' %}<i class="fas fa-shipping-fast"></i>{% elif order.order_status == 'DELIVERED' %}<i class="fas fa-check-double"></i>{% elif order.order_status == 'SIGNED' %}<i class="fas fa-signature"></i>{% else %}<i class="fas fa-times-circle"></i>{% endif %}
+                                    {{ order.get_order_status_display }}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="info-item">
+                            <h6>Order Date</h6>
+                            <p><i class="fas fa-calendar-alt me-2"></i>{{ order.created_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <div class="info-item">
+                            <h6>Total Amount</h6>
+                            <p class="text-primary fw-bold"><i class="fas fa-money-bill-wave me-2"></i>KSh {{ order.total_amount }}</p>
+                        </div>
+                        <div class="info-item">
+                            <h6>Payment Status</h6>
+                            <p>
+                                <span class="badge bg-{% if order.payment_status == 'PAID' %}success{% elif order.payment_status == 'PENDING' %}warning{% else %}danger{% endif %}">
+                                    {% if order.payment_status == 'PAID' %}<i class="fas fa-check-circle"></i>{% else %}<i class="fas fa-exclamation-triangle"></i>{% endif %}
+                                    {{ order.get_payment_status_display }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Information -->
+                <div class="mb-4">
+                    <h5 class="section-title"><i class="fas fa-user me-2"></i>Customer Information</h5>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <h6>Name</h6>
+                            <p><i class="fas fa-user me-2"></i>{{ order.customer_name }}</p>
+                        </div>
+                        <div class="info-item">
+                            <h6>Phone</h6>
+                            <p><i class="fas fa-phone me-2"></i>{{ order.customer_phone }}</p>
+                        </div>
+                        <div class="info-item">
+                            <h6>Email</h6>
+                            <p><i class="fas fa-envelope me-2"></i>{{ order.customer_email }}</p>
+                        </div>
+                        {% if order.delivery_address %}
+                        <div class="info-item">
+                            <h6>Delivery Address</h6>
+                            <p><i class="fas fa-map-marker-alt me-2"></i>{{ order.delivery_address }}</p>
+                        </div>
+                        {% else %}
+                        <div class="info-item">
+                            <h6>Order Type</h6>
+                            <p><i class="fas fa-store me-2"></i>Pickup</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="mb-4">
+                    <h5 class="section-title"><i class="fas fa-shopping-basket me-2"></i>Order Items ({{ order.items.count }})</h5>
+                    {% for item in order.items.all %}
+                    <div class="order-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h6 class="mb-1">{{ item.product.name }}</h6>
+                                <small class="text-muted"><i class="fas fa-tag me-1"></i>{{ item.product.category }}</small>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-cube me-1"></i>Qty: {{ item.quantity }}
+                                </span>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <strong><i class="fas fa-tag me-1"></i>KSh {{ item.price }}</strong>
+                                <small class="text-muted d-block">each</small>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <strong class="text-primary">
+                                    <i class="fas fa-calculator me-1"></i>KSh {{ item.subtotal }}
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if order.notes %}
+                <div class="mb-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-sticky-note me-2"></i>
+                        <strong>Customer Notes:</strong> {{ order.notes }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Signature Section -->
+                {% if order.order_status == 'DELIVERED' or order.order_status == 'SIGNED' %}
+                <div class="signature-section">
+                    <div class="signature-header">
+                        <h5><i class="fas fa-signature me-2"></i>Customer Signature</h5>
+                    </div>
+                    <div class="signature-body">
+                        {% if order.customer_signature %}
+                            <div class="signature-success">
+                                <h6><i class="fas fa-check-circle me-2"></i>Signature Successfully Recorded</h6>
+                                <img src="{{ order.customer_signature.url }}" alt="Customer Signature">
+                                <p class="mb-0 mt-3">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Signed on {{ order.signed_at|date:"M d, Y H:i" }}
+                                </p>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Please sign below to confirm order receipt:</strong>
+                                <br>Your signature confirms that you have received your order in good condition.
+                            </div>
+                            
+                            <canvas id="signature-canvas"></canvas>
+                            
+                            <div class="signature-controls">
+                                <button type="button" class="btn-signature btn-clear" onclick="clearSignature()">
+                                    <i class="fas fa-eraser me-2"></i>Clear Signature
+                                </button>
+                                <button type="button" class="btn-signature btn-save" id="saveSignatureBtn" onclick="saveSignature()">
+                                    <i class="fas fa-save me-2"></i>Save Signature
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- SignaturePad.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Initialize signature pad if canvas exists
+    const canvas = document.getElementById('signature-canvas');
+    if (canvas) {
+        window.signaturePad = new SignaturePad(canvas, {
+            backgroundColor: 'rgb(255, 255, 255)',
+            penColor: 'rgb(0, 0, 0)'
+        });
+        
+        // Resize canvas to match display size
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+            window.signaturePad.clear();
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+    }
+});
+
+// Clear signature function
+function clearSignature() {
+    if (window.signaturePad) {
+        window.signaturePad.clear();
+    }
+}
+
+// Save signature function
+function saveSignature() {
+    if (!window.signaturePad || window.signaturePad.isEmpty()) {
+        alert('Please provide a signature first.');
+        return;
+    }
+    
+    const canvas = document.getElementById('signature-canvas');
+    const dataURL = canvas.toDataURL('image/png');
+    
+    // Disable save button
+    const saveBtn = document.getElementById('saveSignatureBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('signature', dataURL);
+    
+    // Get CSRF token
+    const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+    if (csrfToken) {
+        formData.append('csrfmiddlewaretoken', csrfToken);
+    }
+    
+    // Send signature to server
+    $.ajax({
+        url: '{% url "shop_website:customer_save_signature" order.order_number %}',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader('X-CSRFToken', csrfToken);
+        },
+        success: function(response) {
+            if (response.success) {
+                alert('Signature saved successfully!');
+                location.reload();
+            } else {
+                alert('Error saving signature: ' + response.error);
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Signature';
+            }
+        },
+        error: function() {
+            alert('Error saving signature. Please try again.');
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Signature';
+        }
+    });
+}
+</script>
+{% endblock %}

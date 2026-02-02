@@ -147,12 +147,20 @@
                                         <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                                             {{ order.get_order_status_display }}
                                         </span>
-                                    {% elif order.order_status == 'PREPARING' %}
+                                    {% elif order.order_status == 'PROCESSING' %}
                                         <span class="px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">
                                             {{ order.get_order_status_display }}
                                         </span>
-                                    {% elif order.order_status == 'READY' %}
+                                    {% elif order.order_status == 'IN_TRANSIT' %}
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                            {{ order.get_order_status_display }}
+                                        </span>
+                                    {% elif order.order_status == 'DELIVERED' %}
                                         <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                            {{ order.get_order_status_display }}
+                                        </span>
+                                    {% elif order.order_status == 'SIGNED' %}
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
                                             {{ order.get_order_status_display }}
                                         </span>
                                     {% else %}
@@ -181,12 +189,26 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                             </svg>
                                         </a>
-                                        {% if order.order_status != 'COMPLETED' and order.order_status != 'CANCELLED' %}
+                                        
+                                        <!-- Status Dropdown -->
+                                        <form method="post" action="{% url 'users:cashier_update_order_status' order.pk %}" class="inline">
+                                            {% csrf_token %}
+                                            <select name="status" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+                                                {% for status_value, status_label in status_choices %}
+                                                    <option value="{{ status_value }}" {% if order.order_status == status_value %}selected{% endif %}>
+                                                        {{ status_label }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </form>
+                                        
+                                        <!-- Quick Update Button -->
+                                        {% if order.order_status != 'DELIVERED' and order.order_status != 'CANCELLED' and order.order_status != 'SIGNED' %}
                                             <form method="post" action="{% url 'users:cashier_update_order_status' order.pk %}" class="inline">
                                                 {% csrf_token %}
-                                                <input type="hidden" name="status" value="{% if order.order_status == 'PENDING' %}CONFIRMED{% elif order.order_status == 'CONFIRMED' %}PREPARING{% elif order.order_status == 'PREPARING' %}READY{% elif order.order_status == 'READY' %}COMPLETED{% endif %}">
+                                                <input type="hidden" name="status" value="{% if order.order_status == 'PENDING' %}CONFIRMED{% elif order.order_status == 'CONFIRMED' %}PROCESSING{% elif order.order_status == 'PROCESSING' %}IN_TRANSIT{% elif order.order_status == 'IN_TRANSIT' %}DELIVERED{% endif %}">
                                                 <button type="submit" class="text-green-600 hover:text-green-900" 
-                                                        title="Update Status"
+                                                        title="Quick Update Status"
                                                         onclick="return confirm('Update order status?')">
                                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>

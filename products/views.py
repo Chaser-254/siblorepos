@@ -125,17 +125,40 @@ def product_delete(request, pk):
         # Site admins can see all products
         product = get_object_or_404(Product, pk=pk)
     
+    # Check if product is referenced in any sales
+    from sales.models import SaleItem
+    sale_items = SaleItem.objects.filter(product=product)
+    
     if request.method == 'POST':
         confirm_name = request.POST.get('confirm_name', '')
         if confirm_name == product.name:
-            product_name = product.name
-            product.delete()
-            messages.success(request, f'Product "{product_name}" deleted successfully!')
-            return redirect('products:product_list')
+            try:
+                product_name = product.name
+                
+                # Check if product has sales - if so, we can't delete it to preserve sales history
+                if sale_items.exists():
+                    messages.error(request, f'Cannot delete "{product_name}" because it is referenced in {sale_items.count()} sale record(s). Sales history must be preserved. Consider deactivating the product instead.')
+                    return render(request, 'products/product_delete.html', {
+                        'product': product, 
+                        'has_sales': True,
+                        'sale_items_count': sale_items.count()
+                    })
+                
+                # If no sales, proceed with deletion
+                product.delete()
+                messages.success(request, f'Product "{product_name}" deleted successfully!')
+                return redirect('products:product_list')
+                
+            except Exception as e:
+                messages.error(request, f'Error deleting product: {str(e)}')
         else:
             messages.error(request, 'Product name confirmation does not match. Please type the exact product name.')
     
-    return render(request, 'products/product_delete.html', {'product': product})
+    return render(request, 'products/product_delete.html', {
+        'product': product,
+        'has_sales': sale_items.exists(),
+        'sale_items_count': sale_items.count()
+    })
 
 @login_required
 def category_list(request):

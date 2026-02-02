@@ -9,6 +9,51 @@
     <style>
         .sidebar-item:hover { background-color: #f3f4f6; }
         .sidebar-item.active { background-color: #3b82f6; color: white; }
+        
+        /* Mobile menu styles */
+        .mobile-menu-btn { display: none; }
+        .desktop-sidebar { display: block; }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-btn { display: block; }
+            .desktop-sidebar { display: none; }
+            .mobile-sidebar { 
+                position: fixed; 
+                top: 0; 
+                left: -100%; 
+                width: 280px; 
+                height: 100vh; 
+                background: white; 
+                z-index: 50; 
+                transition: left 0.3s ease; 
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+                overflow-y: auto;
+            }
+            .mobile-sidebar.active { left: 0; }
+            .sidebar-overlay { 
+                position: fixed; 
+                top: 0; 
+                left: 0; 
+                width: 100%; 
+                height: 100vh; 
+                background: rgba(0,0,0,0.5); 
+                z-index: 40; 
+                display: none; 
+            }
+            .sidebar-overlay.active { display: block; }
+            body.sidebar-open { overflow: hidden; }
+            
+            /* Improve mobile table scrolling */
+            .overflow-x-auto {
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Better mobile touch targets */
+            .btn-mobile {
+                min-height: 44px;
+                min-width: 44px;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50 flex flex-col min-h-screen">
@@ -18,10 +63,15 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
+                    <!-- Mobile menu button -->
+                    <button id="mobileMenuBtn" class="mobile-menu-btn md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 mr-2">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
                     <div class="flex-shrink-0 flex items-center">
-                        <i class="fas fa-cash-register text-blue-600 text-2xl mr-3"></i>
-                        <h1 class="font-bold text-xl text-gray-800">SibLore POS</h1>
+                        <i class="fas fa-cash-register text-blue-600 text-2xl mr-2 sm:mr-3"></i>
+                        <h1 class="font-bold text-lg sm:text-xl text-gray-800">SibLore POS</h1>
                     </div>
+                </div>
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
                         <a href="{% url 'sales:dashboard' %}" class="border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Dashboard
@@ -38,35 +88,43 @@
                         <a href="{% url 'sales:reports' %}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Reports
                         </a>
+                        {% if user.is_authenticated and user.profile.can_view_revenue_debts %}
+                        <a href="{% url 'invoicing:dashboard' %}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <i class="fas fa-file-invoice-dollar mr-1"></i>
+                            Invoicing
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2 sm:space-x-4">
                     {% if user.is_authenticated %}
-                        <span class="text-sm text-gray-600">
-                            <i class="fas fa-user-circle mr-1"></i>
-                            {{ user.username }} ({{ user.profile.get_role_display }})
-                        </span>
-                        <span class="text-sm text-gray-600">
-                            <i class="fas fa-clock mr-1"></i>
-                            {% now "H:i" %}
-                        </span>
+                        <div class="hidden sm:flex items-center space-x-2 sm:space-x-4">
+                            <span class="text-sm text-gray-600">
+                                <i class="fas fa-user-circle mr-1"></i>
+                                {{ user.username }}
+                            </span>
+                            <span class="text-sm text-gray-600">
+                                <i class="fas fa-clock mr-1"></i>
+                                {% now "H:i" %}
+                            </span>
+                        </div>
                         {% if user.is_superuser %}
-                        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                        <span class="hidden sm:inline text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
                             <i class="fas fa-shield-alt mr-1"></i>Superuser
                         </span>
                         {% endif %}
-                        <a href="{% url 'users:logout' %}" class="text-sm text-red-600 hover:text-red-800">
+                        <a href="{% url 'users:logout' %}" class="text-sm text-red-600 hover:text-red-800 flex items-center">
                             <i class="fas fa-sign-out-alt mr-1"></i>
-                            Logout
+                            <span class="hidden sm:inline">Logout</span>
                         </a>
                     {% else %}
-                        <a href="{% url 'users:login' %}" class="text-sm text-blue-600 hover:text-blue-800">
+                        <a href="{% url 'users:login' %}" class="text-sm text-blue-600 hover:text-blue-800 flex items-center">
                             <i class="fas fa-sign-in-alt mr-1"></i>
-                            Login
+                            <span class="hidden sm:inline">Login</span>
                         </a>
-                        <a href="{% url 'users:register_request' %}" class="text-sm text-green-600 hover:text-green-800">
+                        <a href="{% url 'users:register_request' %}" class="text-sm text-green-600 hover:text-green-800 flex items-center">
                             <i class="fas fa-user-plus mr-1"></i>
-                            Request Account
+                            <span class="hidden sm:inline">Register</span>
                         </a>
                     {% endif %}
                 </div>
@@ -75,9 +133,18 @@
     </nav>
 
     <div class="flex">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-white shadow-md min-h-screen">
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+        
+        <!-- Mobile Sidebar -->
+        <aside id="mobileSidebar" class="mobile-sidebar">
             <div class="p-4">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800">Menu</h2>
+                    <button id="closeSidebarBtn" class="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
                 <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main Menu</h3>
                 <ul class="space-y-2">
                     <li>
@@ -133,6 +200,14 @@
                             Reports
                         </a>
                     </li>
+                    {% if user.is_authenticated and user.profile.can_view_revenue_debts %}
+                    <li>
+                        <a href="{% url 'invoicing:dashboard' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-file-invoice-dollar mr-3 text-gray-400"></i>
+                            Invoicing
+                        </a>
+                    </li>
+                    {% endif %}
                     {% endif %}
                 </ul>
                 
@@ -249,6 +324,12 @@
                             Sales Reports
                         </a>
                     </li>
+                    <li>
+                        <a href="{% url 'invoicing:dashboard' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-file-invoice-dollar mr-3 text-gray-400"></i>
+                            Invoicing
+                        </a>
+                    </li>
                 </ul>
                 {% elif user.profile.is_cashier %}
                 <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-4">Cashier Dashboard</h3>
@@ -281,6 +362,243 @@
                             Sales History
                         </a>
                     </li>
+                    <li>
+                        <a href="{% url 'invoicing:invoice_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-file-invoice-dollar mr-3 text-gray-400"></i>
+                            Invoices
+                        </a>
+                    </li>
+                </ul>
+                {% endif %}
+                {% endif %}
+        </aside>
+        
+        <!-- Desktop Sidebar -->
+        <aside class="desktop-sidebar w-64 bg-white shadow-md min-h-screen">
+            <div class="p-4">
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main Menu</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'sales:dashboard' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-chart-line mr-3 text-gray-400"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'sales:pos_terminal' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-shopping-cart mr-3 text-gray-400"></i>
+                            POS Terminal
+                        </a>
+                    </li>
+                    {% if user.is_authenticated and user.profile.can_manage_products %}
+                    <li>
+                        <a href="{% url 'products:product_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-box mr-3 text-gray-400"></i>
+                            Products
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'products:stock_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-warehouse mr-3 text-gray-400"></i>
+                            Stock Management
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <a href="{% url 'sales:sales_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-receipt mr-3 text-gray-400"></i>
+                            Sales History
+                        </a>
+                    </li>
+                    {% if user.is_authenticated and user.profile.can_view_revenue_debts %}
+                    <li>
+                        <a href="{% url 'sales:customers_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-users mr-3 text-gray-400"></i>
+                            Customers
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'sales:debts_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-hand-holding-usd mr-3 text-gray-400"></i>
+                            Debt Management
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if user.is_authenticated and user.profile.can_view_all_reports %}
+                    <li>
+                        <a href="{% url 'sales:reports' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-chart-bar mr-3 text-gray-400"></i>
+                            Reports
+                        </a>
+                    </li>
+                    {% if user.is_authenticated and user.profile.can_view_revenue_debts %}
+                    <li>
+                        <a href="{% url 'invoicing:dashboard' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-file-invoice-dollar mr-3 text-gray-400"></i>
+                            Invoicing
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endif %}
+                </ul>
+                
+                {% if user.is_authenticated %}
+                {% if user.is_superuser %}
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-4">Site Administration</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'users:site_owner_dashboard' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md bg-purple-50 text-purple-700">
+                            <i class="fas fa-crown mr-3 text-purple-500"></i>
+                            Site Admin Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'users:registration_requests' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-user-check mr-3 text-gray-400"></i>
+                            Registration Requests
+                            {% if pending_requests_count > 0 %}
+                                <span class="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">{{ pending_requests_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'users:user_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-users-cog mr-3 text-gray-400"></i>
+                            User Management
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-cog mr-3 text-gray-400"></i>
+                            Django Admin
+                        </a>
+                    </li>
+                </ul>
+                {% elif user.profile.is_shop_admin %}
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-4">Shop Administration</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'users:shop_admin_dashboard' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md bg-blue-50 text-blue-700">
+                            <i class="fas fa-store mr-3 text-blue-500"></i>
+                            Shop Admin Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'users:business_details' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-cog mr-3 text-gray-400"></i>
+                            Business Details
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'users:cashier_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-user-tie mr-3 text-gray-400"></i>
+                            Cashier Management
+                        </a>
+                    </li>
+                </ul>
+                
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-4">Sales Operations</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'sales:dashboard' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-cash-register mr-3 text-gray-400"></i>
+                            POS Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'sales:sales_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-receipt mr-3 text-gray-400"></i>
+                            Sales History
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'sales:customers_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-users mr-3 text-gray-400"></i>
+                            Customers
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'sales:debts_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-hand-holding-usd mr-3 text-gray-400"></i>
+                            Debt Management
+                        </a>
+                    </li>
+                </ul>
+                
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-4">Product Management</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'products:product_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-box mr-3 text-gray-400"></i>
+                            Products
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'products:category_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-tags mr-3 text-gray-400"></i>
+                            Categories
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'products:stock_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-warehouse mr-3 text-gray-400"></i>
+                            Stock Management
+                        </a>
+                    </li>
+                </ul>
+                
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-4">Reports</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'sales:reports' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-chart-bar mr-3 text-gray-400"></i>
+                            Sales Reports
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'invoicing:dashboard' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-file-invoice-dollar mr-3 text-gray-400"></i>
+                            Invoicing
+                        </a>
+                    </li>
+                </ul>
+                {% elif user.profile.is_cashier %}
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-4">Cashier Dashboard</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'users:cashier_dashboard' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md bg-green-50 text-green-700">
+                            <i class="fas fa-cash-register mr-3 text-green-500"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'users:cashier_orders' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-shopping-bag mr-3 text-gray-400"></i>
+                            Website Orders
+                        </a>
+                    </li>
+                </ul>
+                
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-6 mb-4">Quick Access</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'sales:pos_terminal' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-shopping-cart mr-3 text-gray-400"></i>
+                            POS Terminal
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'sales:sales_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-receipt mr-3 text-gray-400"></i>
+                            Sales History
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'invoicing:invoice_list' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md">
+                            <i class="fas fa-file-invoice-dollar mr-3 text-gray-400"></i>
+                            Invoices
+                        </a>
+                    </li>
                 </ul>
                 {% endif %}
                 {% endif %}
@@ -288,7 +606,7 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-1 p-6">
+        <main class="flex-1 p-4 sm:p-6 main-content">
             {% if messages %}
                 <div class="mb-4">
                     {% for message in messages %}
@@ -315,8 +633,36 @@
     </footer>
 
     <script>
-        // Set active sidebar item
+        // Mobile sidebar functionality
         document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+            const mobileSidebar = document.getElementById('mobileSidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            function openSidebar() {
+                mobileSidebar.classList.add('active');
+                sidebarOverlay.classList.add('active');
+                document.body.classList.add('sidebar-open');
+            }
+            
+            function closeSidebar() {
+                mobileSidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+            }
+            
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', openSidebar);
+            }
+            if (closeSidebarBtn) {
+                closeSidebarBtn.addEventListener('click', closeSidebar);
+            }
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', closeSidebar);
+            }
+            
+            // Set active sidebar item
             const currentPath = window.location.pathname;
             const sidebarItems = document.querySelectorAll('.sidebar-item');
             
@@ -327,5 +673,7 @@
             });
         });
     </script>
+    
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Invoicing System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .invoice-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .status-draft { background-color: #f3f4f6; color: #6b7280; }
+    .status-sent { background-color: #dbeafe; color: #1e40af; }
+    .status-paid { background-color: #d1fae5; color: #065f46; }
+    .status-partially-paid { background-color: #fed7aa; color: #92400e; }
+    .status-overdue { background-color: #fee2e2; color: #991b1b; }
+    .status-cancelled { background-color: #f3f4f6; color: #6b7280; }
+    
+    .invoice-card {
+        transition: all 0.3s ease;
+    }
+    .invoice-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        transition: transform 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .btn-invoice {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    .btn-invoice:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <a href="{% url 'invoicing:dashboard' %}" class="text-blue-600 hover:text-blue-800 font-medium">
+                    <i class="fas fa-file-invoice-dollar mr-2"></i>Invoicing
+                </a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="{% url 'invoicing:invoice_create' %}" class="btn-invoice">
+                    <i class="fas fa-plus mr-2"></i>New Invoice
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<!-- Content will be overridden by child templates -->
+{% endblock %}
+
+{% block extra_js %}
+<!-- Additional JavaScript will be included by child templates -->
+{% endblock %}

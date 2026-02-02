@@ -5,39 +5,510 @@
 
 {% block extra_css %}
 <style>
+/* Modern styling for cashier order detail */
+.order-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.order-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="10" cy="50" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="90" cy="50" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="50" cy="90" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.order-header h1 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 2.8rem;
+    position: relative;
+    z-index: 1;
+}
+
+.order-header p {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+    font-size: 1.2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: none;
+    border-radius: 20px 20px 0 0 !important;
+    padding: 1.8rem;
+    position: relative;
+}
+
+.card-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 1.8rem;
+    right: 1.8rem;
+    height: 3px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 2px;
+}
+
+.card-header h5 {
+    margin: 0;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.3rem;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
 .status-badge {
-    font-size: 1.1em;
-    padding: 0.5em 1em;
+    font-size: 0.9em;
+    padding: 0.6em 1.2em;
+    border-radius: 25px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
+
 .order-item {
-    border-left: 3px solid #007bff;
-    transition: background-color 0.2s;
+    border-left: 4px solid #667eea;
+    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border-radius: 15px;
+    margin-bottom: 1.2rem;
+    padding: 1.5rem;
+    position: relative;
 }
+
+.order-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #667eea, #764ba2);
+    border-radius: 2px 0 0 2px;
+}
+
 .order-item:hover {
-    background-color: #f8f9fa;
+    background: linear-gradient(135deg, #e8ecff 0%, #f8f9ff 100%);
+    transform: translateX(8px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
 }
+
 .customer-info {
-    background-color: #f8f9fa;
-    border-radius: 8px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 20px;
+    border: none;
+    position: relative;
+}
+
+.customer-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 20px 20px 0 0;
+}
+
+.customer-info .card-header {
+    background: transparent;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.customer-info .card-header::after {
+    display: none;
+}
+
+.info-item {
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-item:hover {
+    background: rgba(102, 126, 234, 0.05);
+    margin: 0 -1rem;
+    padding: 1rem;
+    border-radius: 10px;
+}
+
+.info-item h6 {
+    color: #6c757d;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.info-item p {
+    color: #2c3e50;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 0.8rem 1.8rem;
+    font-weight: 600;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-light {
+    background: rgba(255,255,255,0.9);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    padding: 0.8rem 1.8rem;
+    font-weight: 600;
+    transition: all 0.4s ease;
+    backdrop-filter: blur(10px);
+}
+
+.btn-light:hover {
+    background: rgba(255,255,255,1);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255,255,255,0.3);
+}
+
+.btn-outline-primary {
+    border: 2px solid #667eea;
+    color: #667eea;
+    border-radius: 12px;
+    padding: 0.8rem 1.8rem;
+    font-weight: 600;
+    transition: all 0.4s ease;
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: #667eea;
+    border-color: #667eea;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.btn-outline-secondary {
+    border: 2px solid #6c757d;
+    color: #6c757d;
+    border-radius: 12px;
+    padding: 0.8rem 1.8rem;
+    font-weight: 600;
+    transition: all 0.4s ease;
+}
+
+.btn-outline-secondary:hover {
+    background: #6c757d;
+    border-color: #6c757d;
+    transform: translateY(-3px);
+}
+
+.btn-outline-info {
+    border: 2px solid #17a2b8;
+    color: #17a2b8;
+    border-radius: 12px;
+    padding: 0.8rem 1.8rem;
+    font-weight: 600;
+    transition: all 0.4s ease;
+}
+
+.btn-outline-info:hover {
+    background: #17a2b8;
+    border-color: #17a2b8;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(23, 162, 184, 0.3);
+}
+
+/* Signature section styling */
+.signature-section {
+    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+    border: 2px solid #667eea;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.signature-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.signature-section .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 0;
+}
+
+.signature-section .card-header::after {
+    display: none;
+}
+
+#signature-canvas {
+    border: 2px dashed #667eea;
+    border-radius: 15px;
+    background: white;
+    box-shadow: inset 0 3px 8px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+#signature-canvas:hover {
+    border-color: #764ba2;
+    box-shadow: inset 0 3px 8px rgba(0,0,0,0.12);
+}
+
+.btn-outline-danger {
+    border: 2px solid #dc3545;
+    color: #dc3545;
+    border-radius: 12px;
+    padding: 0.8rem 1.8rem;
+    font-weight: 600;
+    transition: all 0.4s ease;
+}
+
+.btn-outline-danger:hover {
+    background: #dc3545;
+    border-color: #dc3545;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+}
+
+/* Modal styling */
+.modal-content {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+    overflow: hidden;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px 20px 0 0;
+    border: none;
+    padding: 1.8rem;
+}
+
+.modal-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+.modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 1.5rem 2rem;
+}
+
+.form-select {
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+}
+
+.form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.alert {
+    border-radius: 12px;
+    border: none;
+    padding: 1rem 1.5rem;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #e8f4fd 0%, #d1ecf1 100%);
+    color: #0c5460;
+}
+
+/* Quick actions styling */
+.quick-actions .d-grid {
+    gap: 0.8rem;
+}
+
+.quick-actions .btn {
+    text-align: left;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+/* Order summary styling */
+.order-summary .row > div {
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.order-summary .row > div:last-child {
+    border-bottom: none;
+}
+
+.order-summary strong {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.order-summary .text-primary {
+    color: #667eea !important;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .order-header {
+        padding: 2rem 1.5rem;
+    }
+    
+    .order-header h1 {
+        font-size: 2.2rem;
+    }
+    
+    .order-header p {
+        font-size: 1rem;
+    }
+    
+    .card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .order-header .d-flex {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .order-header .btn {
+        width: 100%;
+    }
+}
+
+/* Loading animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.card:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.card:nth-child(3) {
+    animation-delay: 0.2s;
 }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Header -->
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <div>
-            <h1 class="h2">Order Details</h1>
-            <p class="text-muted">Order #{{ order.order_number }}</p>
-        </div>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <a href="{% url 'users:cashier_orders' %}" class="btn btn-outline-secondary me-2">
-                <i class="fas fa-arrow-left"></i> Back to Orders
-            </a>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
-                <i class="fas fa-edit"></i> Update Status
-            </button>
+    <!-- Modern Header -->
+    <div class="order-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-shopping-cart me-3"></i>Order Details</h1>
+                <p class="mb-0"><i class="fas fa-receipt me-2"></i>Order #{{ order.order_number }}</p>
+            </div>
+            <div>
+                <a href="{% url 'users:cashier_orders' %}" class="btn btn-light">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Orders
+                </a>
+                <button type="button" class="btn btn-light ms-2" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                    <i class="fas fa-edit me-2"></i>Update Status
+                </button>
+            </div>
         </div>
     </div>
 
@@ -46,47 +517,60 @@
         <div class="col-lg-8">
             <!-- Order Status and Basic Info -->
             <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle me-2"></i>Order Information</h5>
+                </div>
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <h5 class="mb-3">Order Information</h5>
-                            <div class="mb-2">
-                                <strong>Status:</strong>
-                                <span class="badge bg-{% if order.order_status == 'PENDING' %}warning{% elif order.order_status == 'CONFIRMED' %}info{% elif order.order_status == 'PREPARING' %}primary{% elif order.order_status == 'READY' %}success{% elif order.order_status == 'COMPLETED' %}secondary{% else %}danger{% endif %} status-badge ms-2">
-                                    {{ order.get_order_status_display }}
-                                </span>
+                            <div class="info-item">
+                                <h6>Order Status</h6>
+                                <p>
+                                    <span class="status-badge bg-{% if order.order_status == 'PENDING' %}warning{% elif order.order_status == 'CONFIRMED' %}info{% elif order.order_status == 'PROCESSING' %}primary{% elif order.order_status == 'IN_TRANSIT' %}purple{% elif order.order_status == 'DELIVERED' %}success{% elif order.order_status == 'SIGNED' %}emerald{% else %}danger{% endif %}">
+                                        {% if order.order_status == 'PENDING' %}<i class="fas fa-clock"></i>{% elif order.order_status == 'CONFIRMED' %}<i class="fas fa-check-circle"></i>{% elif order.order_status == 'PROCESSING' %}<i class="fas fa-cog"></i>{% elif order.order_status == 'IN_TRANSIT' %}<i class="fas fa-shipping-fast"></i>{% elif order.order_status == 'DELIVERED' %}<i class="fas fa-check-double"></i>{% elif order.order_status == 'SIGNED' %}<i class="fas fa-signature"></i>{% else %}<i class="fas fa-times-circle"></i>{% endif %}
+                                        {{ order.get_order_status_display }}
+                                    </span>
+                                </p>
                             </div>
-                            <div class="mb-2">
-                                <strong>Order Time:</strong> {{ order.created_at|date:"M d, Y H:i" }}
+                            <div class="info-item">
+                                <h6>Order Time</h6>
+                                <p><i class="fas fa-calendar-alt me-2"></i>{{ order.created_at|date:"M d, Y H:i" }}</p>
                             </div>
-                            <div class="mb-2">
-                                <strong>Payment Status:</strong>
-                                <span class="badge bg-{% if order.payment_status == 'PAID' %}success{% elif order.payment_status == 'PENDING' %}warning{% else %}danger{% endif %}">
-                                    {{ order.get_payment_status_display }}
-                                </span>
+                            <div class="info-item">
+                                <h6>Payment Status</h6>
+                                <p>
+                                    <span class="badge bg-{% if order.payment_status == 'PAID' %}success{% elif order.payment_status == 'PENDING' %}warning{% else %}danger{% endif %}">
+                                        {% if order.payment_status == 'PAID' %}<i class="fas fa-check-circle"></i>{% else %}<i class="fas fa-exclamation-triangle"></i>{% endif %}
+                                        {{ order.get_payment_status_display }}
+                                    </span>
+                                </p>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <h5 class="mb-3">Order Summary</h5>
-                            <div class="mb-2">
-                                <strong>Subtotal:</strong> KSh {{ order.subtotal }}
-                            </div>
-                            {% if order.delivery_fee > 0 %}
-                                <div class="mb-2">
-                                    <strong>Delivery Fee:</strong> KSh {{ order.delivery_fee }}
+                            <div class="order-summary">
+                                <div class="info-item">
+                                    <h6>Subtotal</h6>
+                                    <p><i class="fas fa-receipt me-2"></i>KSh {{ order.subtotal }}</p>
                                 </div>
-                            {% endif %}
-                            <div class="mb-2">
-                                <strong>Total Amount:</strong> <span class="text-primary">KSh {{ order.total_amount }}</span>
+                                {% if order.delivery_fee > 0 %}
+                                <div class="info-item">
+                                    <h6>Delivery Fee</h6>
+                                    <p><i class="fas fa-truck me-2"></i>KSh {{ order.delivery_fee }}</p>
+                                </div>
+                                {% endif %}
+                                <div class="info-item">
+                                    <h6>Total Amount</h6>
+                                    <p class="text-primary"><i class="fas fa-money-bill-wave me-2"></i>KSh {{ order.total_amount }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
                     {% if order.notes %}
-                        <div class="mt-3">
-                            <h6>Customer Notes:</h6>
-                            <div class="alert alert-info">{{ order.notes }}</div>
-                        </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-sticky-note me-2"></i>
+                        <strong>Customer Notes:</strong> {{ order.notes }}
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -94,24 +578,29 @@
             <!-- Order Items -->
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Order Items ({{ order.items.count }})</h5>
+                    <h5><i class="fas fa-shopping-basket me-2"></i>Order Items ({{ order.items.count }})</h5>
                 </div>
                 <div class="card-body">
                     {% for item in order.items.all %}
-                    <div class="order-item p-3 mb-3">
+                    <div class="order-item">
                         <div class="row align-items-center">
                             <div class="col-md-6">
                                 <h6 class="mb-1">{{ item.product.name }}</h6>
-                                <small class="text-muted">{{ item.product.category }}</small>
+                                <small class="text-muted"><i class="fas fa-tag me-1"></i>{{ item.product.category }}</small>
                             </div>
                             <div class="col-md-2 text-center">
-                                <span class="badge bg-secondary">Qty: {{ item.quantity }}</span>
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-cube me-1"></i>Qty: {{ item.quantity }}
+                                </span>
                             </div>
                             <div class="col-md-2 text-end">
-                                <strong>KSh {{ item.price }}</strong> each
+                                <strong><i class="fas fa-tag me-1"></i>KSh {{ item.price }}</strong>
+                                <small class="text-muted d-block">each</small>
                             </div>
                             <div class="col-md-2 text-end">
-                                <strong class="text-primary">KSh {{ item.subtotal }}</strong>
+                                <strong class="text-primary">
+                                    <i class="fas fa-calculator me-1"></i>KSh {{ item.subtotal }}
+                                </strong>
                             </div>
                         </div>
                     </div>
@@ -122,75 +611,125 @@
 
         <!-- Customer Information -->
         <div class="col-lg-4">
-            <div class="card customer-info">
+            <div class="card customer-info mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Customer Information</h5>
+                    <h5><i class="fas fa-user me-2"></i>Customer Information</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <h6 class="text-muted">Name</h6>
-                        <p class="mb-0">{{ order.customer_name }}</p>
+                    <div class="info-item">
+                        <h6>Name</h6>
+                        <p><i class="fas fa-user me-2"></i>{{ order.customer_name }}</p>
                     </div>
                     
-                    <div class="mb-3">
-                        <h6 class="text-muted">Phone</h6>
-                        <p class="mb-0">
-                            <a href="tel:{{ order.customer_phone }}">{{ order.customer_phone }}</a>
+                    <div class="info-item">
+                        <h6>Phone</h6>
+                        <p>
+                            <a href="tel:{{ order.customer_phone }}" class="text-decoration-none">
+                                <i class="fas fa-phone me-2"></i>{{ order.customer_phone }}
+                            </a>
                         </p>
                     </div>
                     
-                    <div class="mb-3">
-                        <h6 class="text-muted">Email</h6>
-                        <p class="mb-0">
-                            <a href="mailto:{{ order.customer_email }}">{{ order.customer_email }}</a>
+                    <div class="info-item">
+                        <h6>Email</h6>
+                        <p>
+                            <a href="mailto:{{ order.customer_email }}" class="text-decoration-none">
+                                <i class="fas fa-envelope me-2"></i>{{ order.customer_email }}
+                            </a>
                         </p>
                     </div>
                     
                     {% if order.delivery_address %}
-                        <div class="mb-3">
-                            <h6 class="text-muted">Delivery Address</h6>
-                            <p class="mb-0">{{ order.delivery_address }}</p>
+                        <div class="info-item">
+                            <h6>Delivery Address</h6>
+                            <p><i class="fas fa-map-marker-alt me-2"></i>{{ order.delivery_address }}</p>
                         </div>
                     {% else %}
-                        <div class="mb-3">
-                            <h6 class="text-muted">Order Type</h6>
-                            <p class="mb-0">
-                                <i class="fas fa-store"></i> Pickup
-                            </p>
+                        <div class="info-item">
+                            <h6>Order Type</h6>
+                            <p><i class="fas fa-store me-2"></i>Pickup</p>
                         </div>
                     {% endif %}
                 </div>
             </div>
 
             <!-- Quick Actions -->
-            <div class="card mt-3">
+            <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Quick Actions</h5>
+                    <h5><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
-                            <i class="fas fa-edit"></i> Update Status
-                        </button>
-                        
-                        <a href="tel:{{ order.customer_phone }}" class="btn btn-outline-primary">
-                            <i class="fas fa-phone"></i> Call Customer
-                        </a>
-                        
-                        <a href="mailto:{{ order.customer_email }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-envelope"></i> Email Customer
-                        </a>
-                        
-                        {% if order.delivery_address %}
+                    <div class="quick-actions">
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                                <i class="fas fa-edit"></i> Update Status
+                            </button>
+                            
+                            <a href="tel:{{ order.customer_phone }}" class="btn btn-outline-primary">
+                                <i class="fas fa-phone"></i> Call Customer
+                            </a>
+                            
+                            <a href="mailto:{{ order.customer_email }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-envelope"></i> Email Customer
+                            </a>
+                            
+                            {% if order.delivery_address %}
                             <button type="button" class="btn btn-outline-info" onclick="window.open('https://maps.google.com/?q={{ order.delivery_address }}', '_blank')">
                                 <i class="fas fa-map"></i> View on Map
                             </button>
-                        {% endif %}
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Signature Section -->
+    {% if order.order_status == 'DELIVERED' or order.order_status == 'SIGNED' %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-signature"></i> Customer Signature
+                        {% if order.customer_signature %}
+                            <span class="badge bg-success ms-2">Signed</span>
+                        {% else %}
+                            <span class="badge bg-warning ms-2">Signature Required</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if order.customer_signature %}
+                        <div class="text-center">
+                            <img src="{{ order.customer_signature.url }}" alt="Customer Signature" class="img-fluid border rounded" style="max-width: 400px;">
+                            <div class="mt-3">
+                                <span class="text-success">
+                                    <i class="fas fa-check-circle"></i> 
+                                    Signed on {{ order.signed_at|date:"M d, Y H:i" }}
+                                </span>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            <p class="text-muted mb-3">Please ask the customer to sign below to confirm order pickup:</p>
+                            <canvas id="signature-canvas" width="600" height="200" class="border border-2 border-secondary rounded" style="touch-action: none; cursor: crosshair; background: white;"></canvas>
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-outline-danger me-2" onclick="clearSignature()">
+                                    <i class="fas fa-eraser"></i> Clear
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="saveSignature()">
+                                    <i class="fas fa-save"></i> Save Signature
+                                </button>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Update Status Modal -->
@@ -231,8 +770,31 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- SignaturePad.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <script>
 $(document).ready(function() {
+    // Initialize signature pad if canvas exists
+    const canvas = document.getElementById('signature-canvas');
+    if (canvas) {
+        window.signaturePad = new SignaturePad(canvas, {
+            backgroundColor: 'rgb(255, 255, 255)',
+            penColor: 'rgb(0, 0, 0)'
+        });
+        
+        // Resize canvas to match display size
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+            window.signaturePad.clear();
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+    }
+    
     // Auto-refresh every 30 seconds
     setInterval(function() {
         location.reload();
@@ -252,5 +814,57 @@ $(document).ready(function() {
         }
     });
 });
+
+// Clear signature function
+function clearSignature() {
+    if (window.signaturePad) {
+        window.signaturePad.clear();
+    }
+}
+
+// Save signature function
+function saveSignature() {
+    if (!window.signaturePad || window.signaturePad.isEmpty()) {
+        alert('Please provide a signature first.');
+        return;
+    }
+    
+    const canvas = document.getElementById('signature-canvas');
+    const dataURL = canvas.toDataURL('image/png');
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('signature', dataURL);
+    formData.append('order_id', {{ order.pk }});
+    
+    // Get CSRF token
+    const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+    if (csrfToken) {
+        formData.append('csrfmiddlewaretoken', csrfToken);
+    }
+    
+    // Send signature to server
+    $.ajax({
+        url: '{% url "users:cashier_save_signature" %}',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader('X-CSRFToken', csrfToken);
+        },
+        success: function(response) {
+            if (response.success) {
+                alert('Signature saved successfully!');
+                location.reload();
+            } else {
+                alert('Error saving signature: ' + response.error);
+            }
+        },
+        error: function() {
+            alert('Error saving signature. Please try again.');
+        }
+    });
+}
 </script>
 {% endblock %}

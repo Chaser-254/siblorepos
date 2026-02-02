@@ -3,50 +3,52 @@
 {% block title %}Sales History - SibLore POS{% endblock %}
 
 {% block content %}
-<div class="mb-6">
-    <div class="flex justify-between items-center">
+<div class="mb-4 sm:mb-6">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">Sales History</h1>
-            <p class="text-gray-600 mt-2">View and manage all sales transactions</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Sales History</h1>
+            <p class="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">View and manage all sales transactions</p>
         </div>
-        <a href="{% url 'sales:pos_terminal' %}" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-            <i class="fas fa-plus-circle mr-2"></i>New Sale
+        <a href="{% url 'sales:pos_terminal' %}" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm sm:text-base inline-flex items-center justify-center">
+            <i class="fas fa-plus-circle mr-2"></i>
+            <span class="hidden sm:inline">New Sale</span>
+            <span class="sm:hidden">New</span>
         </a>
     </div>
 </div>
 
 <!-- Filter Form -->
-<div class="bg-white rounded-lg shadow p-4 mb-6">
-    <form method="get" class="flex flex-col md:flex-row gap-4 items-end">
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <select name="status" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+<div class="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
+    <form method="get" class="flex flex-col lg:flex-row gap-3 sm:gap-4 items-end">
+        <div class="w-full sm:w-auto">
+            <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Status</label>
+            <select name="status" class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                 <option value="">All Status</option>
                 {% for status_value, status_label in status_choices %}
                     <option value="{{ status_value }}">{{ status_label }}</option>
                 {% endfor %}
             </select>
         </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
-            <select name="payment_method" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div class="w-full sm:w-auto">
+            <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">Payment Method</label>
+            <select name="payment_method" class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                 <option value="">All Methods</option>
                 {% for method_value, method_label in payment_choices %}
                     <option value="{{ method_value }}">{{ method_label }}</option>
                 {% endfor %}
             </select>
         </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">From Date</label>
+        <div class="w-full sm:w-auto">
+            <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">From Date</label>
             <input type="date" name="date_from" value="{{ request.GET.date_from }}" 
-                   class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                   class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
         </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">To Date</label>
+        <div class="w-full sm:w-auto">
+            <label class="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">To Date</label>
             <input type="date" name="date_to" value="{{ request.GET.date_to }}" 
-                   class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                   class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
         </div>
-        <button type="submit" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+        <button type="submit" class="w-full sm:w-auto bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors text-sm">
             <i class="fas fa-filter mr-2"></i>Filter
         </button>
     </form>
@@ -58,43 +60,43 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
+                    <th class="hidden sm:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                    <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                    <th class="hidden md:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                    <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                    <th class="hidden lg:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                    <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 {% for sale in sales %}
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ sale.invoice_number }}</div>
+                        <td class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900 truncate max-w-[100px] sm:max-w-none">{{ sale.invoice_number }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="hidden sm:table-cell px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ sale.created_at|date:"M d, Y" }}<br>
                             <span class="text-xs text-gray-500">{{ sale.created_at|time:"H:i" }}</span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ sale.customer.name|default:"Walk-in Customer" }}
+                        <td class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="truncate max-w-[120px] sm:max-w-none">{{ sale.customer.name|default:"Walk-in Customer" }}</div>
                             {% if sale.customer.phone %}
-                                <br><span class="text-xs text-gray-500">{{ sale.customer.phone }}</span>
+                                <br><span class="text-xs text-gray-500 hidden sm:inline">{{ sale.customer.phone }}</span>
                             {% endif %}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="hidden md:table-cell px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ sale.sale_items.count }} items
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-sm text-gray-900">
                             <div class="font-medium">KES {{ sale.total_amount|floatformat:2 }}</div>
                             {% if sale.balance_due > 0 %}
                                 <div class="text-xs text-red-600">Due: KES {{ sale.balance_due|floatformat:2 }}</div>
                             {% endif %}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                        <td class="hidden lg:table-cell px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium 
                                 {% if sale.payment_method == 'CASH' %}bg-green-100 text-green-800
                                 {% elif sale.payment_method == 'CARD' %}bg-blue-100 text-blue-800
                                 {% elif sale.payment_method == 'MOBILE' %}bg-purple-100 text-purple-800
@@ -103,8 +105,8 @@
                                 {{ sale.get_payment_method_display }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                        <td class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium 
                                 {% if sale.status == 'COMPLETED' %}bg-green-100 text-green-800
                                 {% elif sale.status == 'PENDING' %}bg-yellow-100 text-yellow-800
                                 {% elif sale.status == 'CANCELLED' %}bg-red-100 text-red-800
@@ -112,14 +114,16 @@
                                 {{ sale.get_status_display }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{% url 'sales:sale_detail' sale.pk %}" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
-                            <a href="{% url 'sales:sale_delete' sale.pk %}" class="text-red-600 hover:text-red-900">Delete</a>
+                        <td class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <a href="{% url 'sales:sale_detail' sale.pk %}" class="text-blue-600 hover:text-blue-900 text-xs sm:text-sm">View</a>
+                                <a href="{% url 'sales:sale_delete' sale.pk %}" class="text-red-600 hover:text-red-900 text-xs sm:text-sm">Delete</a>
+                            </div>
                         </td>
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">No sales found</td>
+                        <td colspan="8" class="px-3 sm:px-6 py-2 sm:py-4 text-center text-gray-500 text-sm">No sales found</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -128,51 +132,51 @@
 </div>
 
 <!-- Summary -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
-    <div class="bg-white rounded-lg shadow p-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-6 sm:mt-8">
+    <div class="bg-white rounded-lg shadow p-4 sm:p-6">
         <div class="flex items-center">
-            <div class="p-3 rounded-full bg-blue-100 text-blue-600">
-                <i class="fas fa-receipt text-xl"></i>
+            <div class="p-2 sm:p-3 rounded-full bg-blue-100 text-blue-600">
+                <i class="fas fa-receipt text-lg sm:text-xl"></i>
             </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Total Sales</p>
-                <p class="text-2xl font-semibold text-gray-900">{{ sales.count }}</p>
+            <div class="ml-3 sm:ml-4">
+                <p class="text-xs sm:text-sm font-medium text-gray-600">Total Sales</p>
+                <p class="text-lg sm:text-2xl font-semibold text-gray-900">{{ sales.count }}</p>
             </div>
         </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="bg-white rounded-lg shadow p-4 sm:p-6">
         <div class="flex items-center">
-            <div class="p-3 rounded-full bg-green-100 text-green-600">
-                <i class="fas fa-dollar-sign text-xl"></i>
+            <div class="p-2 sm:p-3 rounded-full bg-green-100 text-green-600">
+                <i class="fas fa-dollar-sign text-lg sm:text-xl"></i>
             </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p class="text-2xl font-semibold text-gray-900">KES {{ total_revenue|floatformat:2 }}</p>
+            <div class="ml-3 sm:ml-4">
+                <p class="text-xs sm:text-sm font-medium text-gray-600">Total Revenue</p>
+                <p class="text-lg sm:text-2xl font-semibold text-gray-900">KES {{ total_revenue|floatformat:2 }}</p>
             </div>
         </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="bg-white rounded-lg shadow p-4 sm:p-6">
         <div class="flex items-center">
-            <div class="p-3 rounded-full bg-purple-100 text-purple-600">
-                <i class="fas fa-shopping-cart text-xl"></i>
+            <div class="p-2 sm:p-3 rounded-full bg-purple-100 text-purple-600">
+                <i class="fas fa-shopping-cart text-lg sm:text-xl"></i>
             </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Items Sold</p>
-                <p class="text-2xl font-semibold text-gray-900">{{ items_sold }}</p>
+            <div class="ml-3 sm:ml-4">
+                <p class="text-xs sm:text-sm font-medium text-gray-600">Items Sold</p>
+                <p class="text-lg sm:text-2xl font-semibold text-gray-900">{{ items_sold }}</p>
             </div>
         </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="bg-white rounded-lg shadow p-4 sm:p-6">
         <div class="flex items-center">
-            <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
-                <i class="fas fa-calculator text-xl"></i>
+            <div class="p-2 sm:p-3 rounded-full bg-yellow-100 text-yellow-600">
+                <i class="fas fa-calculator text-lg sm:text-xl"></i>
             </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Average Sale</p>
-                <p class="text-2xl font-semibold text-gray-900">KES {{ average_sale|floatformat:2 }}</p>
+            <div class="ml-3 sm:ml-4">
+                <p class="text-xs sm:text-sm font-medium text-gray-600">Average Sale</p>
+                <p class="text-lg sm:text-2xl font-semibold text-gray-900">KES {{ average_sale|floatformat:2 }}</p>
             </div>
         </div>
     </div>

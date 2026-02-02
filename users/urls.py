@@ -14,6 +14,7 @@ urlpatterns = [
     path('cashier/orders/', views.cashier_orders, name='cashier_orders'),
     path('cashier/orders/<int:pk>/', views.cashier_order_detail, name='cashier_order_detail'),
     path('cashier/orders/<int:pk>/update/', views.cashier_update_order_status, name='cashier_update_order_status'),
+    path('cashier/save-signature/', views.cashier_save_signature, name='cashier_save_signature'),
     path('requests/', views.registration_requests, name='registration_requests'),
     path('requests/<int:pk>/update/', views.update_request_status, name='update_request_status'),
     path('requests/<int:pk>/delete/', views.delete_request, name='delete_request'),

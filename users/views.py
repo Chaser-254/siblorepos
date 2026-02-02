@@ -7,6 +7,13 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Sum, Count, F
 from django.utils import timezone
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+import base64
+import io
+import json
+from PIL import Image
+from django.core.files.base import ContentFile
 from .models import UserProfile, RegistrationRequest
 from .forms import UserCreationForm, UserUpdateForm, CashierCreationForm, CashierUpdateForm, BusinessDetailsForm
 from .decorators import get_user_profile
@@ -227,6 +234,21 @@ def shop_admin_dashboard(request):
     from sales.models import Sale, Customer, Debt
     from products.models import Product, Stock
     from users.models import UserProfile, RegistrationRequest
+    from invoicing.models import Invoice
+    
+    # Invoice statistics - filtered by shop
+    invoice_stats = Invoice.objects.filter(shop_admin=profile).aggregate(
+        total_invoices=Count('id'),
+        total_amount=Sum('total_amount'),
+        paid_amount=Sum('amount_paid')
+    )
+    # Calculate pending amount separately
+    invoice_stats['pending_amount'] = (invoice_stats['total_amount'] or 0) - (invoice_stats['paid_amount'] or 0)
+    
+    # Recent invoices - filtered by shop
+    recent_invoices = Invoice.objects.filter(
+        shop_admin=profile
+    ).select_related('customer').order_by('-created_at')[:5]
     
     # Sales statistics - filtered by shop
     today_sales = Sale.objects.filter(
@@ -302,6 +324,9 @@ def shop_admin_dashboard(request):
         'cashiers': cashiers,
         'pending_requests': pending_requests,
         'recent_sales': recent_sales,
+        # Invoice data
+        'invoice_stats': invoice_stats,
+        'recent_invoices': recent_invoices,
         # Website data
         'shop_profile': shop_profile,
         'website_products': website_products,
@@ -704,9 +729,10 @@ def cashier_orders(request):
         'status_choices': [
             ('PENDING', 'Pending'),
             ('CONFIRMED', 'Confirmed'),
-            ('PREPARING', 'Preparing'),
-            ('READY', 'Ready for Pickup/Delivery'),
-            ('COMPLETED', 'Completed'),
+            ('PROCESSING', 'Processing'),
+            ('IN_TRANSIT', 'In Transit'),
+            ('DELIVERED', 'Delivered'),
+            ('SIGNED', 'Signed'),
             ('CANCELLED', 'Cancelled'),
         ],
         'current_status': status_filter,
@@ -763,10 +789,15 @@ def cashier_update_order_status(request, pk):
         
         return redirect('users:cashier_orders')
         
-    except:
+    except (ShopProfile.DoesNotExist, Order.DoesNotExist) as e:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': False, 'error': 'Order not found or access denied'})
         messages.error(request, 'Order not found or access denied.')
+        return redirect('users:cashier_orders')
+    except Exception as e:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': f'An error occurred: {str(e)}'})
+        messages.error(request, f'An error occurred: {str(e)}')
         return redirect('users:cashier_orders')
 
 @login_required
@@ -786,6 +817,10 @@ def cashier_order_detail(request, pk):
     try:
         from shop_website.models import ShopProfile, Order
         shop_profile = shop_admin.shop_website
+        if not shop_profile:
+            messages.error(request, 'Shop website not configured. Please contact your shop administrator.')
+            return redirect('users:cashier_orders')
+            
         order = get_object_or_404(Order, pk=pk, shop_profile=shop_profile)
         
         context = {
@@ -795,8 +830,11 @@ def cashier_order_detail(request, pk):
         
         return render(request, 'users/cashier_order_detail.html', context)
         
-    except:
+    except (ShopProfile.DoesNotExist, Order.DoesNotExist) as e:
         messages.error(request, 'Order not found or access denied.')
+        return redirect('users:cashier_orders')
+    except Exception as e:
+        messages.error(request, f'An error occurred: {str(e)}')
         return redirect('users:cashier_orders')
 
 def user_toggle_active(request, pk):
@@ -817,3 +855,73 @@ def user_toggle_active(request, pk):
     status = "activated" if user_profile.is_active else "deactivated"
     messages.success(request, f'User "{user.username}" {status} successfully!')
     return redirect('users:user_list')
+
+
+@csrf_exempt
+@require_POST
+@login_required
+def cashier_save_signature(request):
+    """Save customer signature for an order (cashier version)"""
+    try:
+        order_id = request.POST.get('order_id')
+        signature_data = request.POST.get('signature')
+        
+        if not order_id or not signature_data:
+            return JsonResponse({'success': False, 'error': 'Missing required data'})
+        
+        # Get user profile and verify cashier
+        profile = get_user_profile(request.user)
+        if not profile.is_cashier:
+            return JsonResponse({'success': False, 'error': 'Access denied'})
+        
+        # Get shop admin's website
+        shop_admin = profile.shop_admin
+        if not shop_admin:
+            return JsonResponse({'success': False, 'error': 'Your account is not assigned to any shop administrator'})
+        
+        # Get order
+        from shop_website.models import Order
+        shop_profile = shop_admin.shop_website
+        if not shop_profile:
+            return JsonResponse({'success': False, 'error': 'Shop website not configured'})
+            
+        order = get_object_or_404(Order, id=order_id, shop_profile=shop_profile)
+        
+        # Check if order is in correct status for signing
+        if order.order_status not in ['DELIVERED', 'SIGNED']:
+            return JsonResponse({'success': False, 'error': 'Order must be delivered before signing'})
+        
+        # Check if signature already exists
+        if order.customer_signature:
+            return JsonResponse({'success': False, 'error': 'Signature already exists for this order'})
+        
+        # Process base64 signature data
+        format, imgstr = signature_data.split(';base64,')
+        ext = format.split('/')[-1]
+        
+        # Convert base64 to image
+        img_data = base64.b64decode(imgstr)
+        image = Image.open(io.BytesIO(img_data))
+        
+        # Save to file
+        image_io = io.BytesIO()
+        image.save(image_io, format='PNG')
+        image_io.seek(0)
+        
+        # Create filename
+        filename = f'signature_order_{order.order_number}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.png'
+        
+        # Save signature
+        order.customer_signature.save(filename, ContentFile(image_io.read()), save=True)
+        order.signed_at = timezone.now()
+        order.order_status = 'SIGNED'
+        order.save()
+        
+        return JsonResponse({'success': True, 'message': 'Signature saved successfully'})
+        
+    except (ValueError, IndexError) as e:
+        return JsonResponse({'success': False, 'error': 'Invalid signature data format'})
+    except (IOError, OSError) as e:
+        return JsonResponse({'success': False, 'error': 'Failed to process signature image'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'An error occurred: {str(e)}'})

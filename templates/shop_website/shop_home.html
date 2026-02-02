@@ -6,24 +6,12 @@
 <style>
     /* Hero Section Styles */
     .hero-section {
-        background: linear-gradient(135deg, var(--primary-color), #1e40af);
-        color: white;
-        padding: 5rem 0;
+        background: var(--gray-50);
+        color: var(--gray-900);
+        padding: 4rem 0;
         position: relative;
         overflow: hidden;
-        border-radius: 0 0 30px 30px;
-        margin-bottom: 4rem;
-    }
-
-    .hero-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-        opacity: 0.3;
+        border-bottom: 1px solid var(--gray-200);
     }
 
     .hero-content {
@@ -32,28 +20,31 @@
     }
 
     .hero-title {
-        font-size: 3.5rem;
+        font-size: 2.5rem;
         font-weight: 700;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
         line-height: 1.2;
-        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        letter-spacing: -0.025em;
+        color: var(--gray-900);
     }
 
     .hero-description {
-        font-size: 1.25rem;
+        font-size: 1.125rem;
         margin-bottom: 2rem;
-        opacity: 0.9;
+        color: var(--gray-600);
         line-height: 1.6;
+        max-width: 600px;
     }
 
     .hero-image {
-        border-radius: 20px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-lg);
         transition: var(--transition);
     }
 
     .hero-image:hover {
-        transform: translateY(-10px) scale(1.05);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-xl);
     }
 
     /* Section Headers */
@@ -64,22 +55,17 @@
     }
 
     .section-header h2 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--dark-color);
-        margin-bottom: 1rem;
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.025em;
     }
 
-    .section-header::after {
-        content: '';
-        position: absolute;
-        bottom: -10px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 80px;
-        height: 4px;
-        background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
-        border-radius: 2px;
+    .section-header p {
+        color: var(--gray-600);
+        font-size: 1rem;
+        margin: 0;
     }
 
     /* Product Cards Enhancement */
@@ -87,11 +73,12 @@
         height: 100%;
         display: flex;
         flex-direction: column;
-        border: none;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        border: 1px solid var(--gray-200);
+        box-shadow: var(--shadow-sm);
         transition: var(--transition);
         position: relative;
         overflow: hidden;
+        background: var(--white);
     }
 
     .product-card::before {
@@ -100,8 +87,8 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        height: 2px;
+        background: var(--accent-color);
         transform: scaleX(0);
         transition: var(--transition);
     }
@@ -111,39 +98,43 @@
     }
 
     .product-card:hover {
-        transform: translateY(-12px);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--gray-300);
     }
 
     .product-image {
-        height: 250px;
+        width: 100%;
+        height: 200px;
         object-fit: cover;
         transition: var(--transition);
     }
 
     .product-card:hover .product-image {
-        transform: scale(1.1);
+        transform: scale(1.02);
     }
 
     .product-body {
-        padding: 1.5rem;
+        padding: 1.25rem;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
     }
 
     .product-title {
-        font-size: 1.25rem;
+        font-size: 1.125rem;
         font-weight: 600;
-        color: var(--dark-color);
-        margin-bottom: 0.75rem;
+        color: var(--gray-900);
+        margin-bottom: 0.5rem;
         line-height: 1.4;
     }
 
     .product-description {
-        color: var(--secondary-color);
+        color: var(--gray-600);
         margin-bottom: 1rem;
         flex-grow: 1;
+        font-size: 0.875rem;
+        line-height: 1.5;
     }
 
     .price-section {
@@ -152,101 +143,69 @@
 
     .original-price {
         text-decoration: line-through;
-        color: #9ca3af;
+        color: var(--gray-400);
         font-size: 0.875rem;
     }
 
     .current-price {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--primary-color);
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-900);
     }
 
     .stock-indicator {
         display: inline-flex;
         align-items: center;
         padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.875rem;
+        border-radius: var(--border-radius);
+        font-size: 0.75rem;
         font-weight: 500;
+        margin-bottom: 1rem;
     }
 
     .in-stock {
-        background: rgba(16, 185, 129, 0.1);
+        background: rgba(5, 150, 105, 0.1);
         color: var(--success-color);
     }
 
     .out-of-stock {
-        background: rgba(239, 68, 68, 0.1);
+        background: rgba(220, 38, 38, 0.1);
         color: var(--danger-color);
     }
 
     /* Call to Action Section */
     .cta-section {
-        background: linear-gradient(135deg, var(--light-color), #e2e8f0);
-        padding: 4rem 2rem;
-        border-radius: 20px;
+        background: var(--gray-50);
+        padding: 3rem 2rem;
+        border-radius: var(--border-radius-lg);
         text-align: center;
-        margin: 4rem 0;
-        border: 2px dashed rgba(37, 99, 235, 0.2);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .cta-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.05), transparent);
-        animation: shimmer 3s infinite;
-    }
-
-    @keyframes shimmer {
-        0% { left: -100%; }
-        100% { left: 100%; }
+        margin: 3rem 0;
+        border: 1px solid var(--gray-200);
     }
 
     .cta-title {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--dark-color);
-        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin-bottom: 0.75rem;
+        letter-spacing: -0.025em;
     }
 
     .cta-description {
-        font-size: 1.125rem;
-        color: var(--secondary-color);
+        font-size: 1rem;
+        color: var(--gray-600);
         margin-bottom: 2rem;
-    }
-
-    /* Animations */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .fade-in-up {
-        animation: fadeInUp 0.8s ease-out;
     }
 
     /* Responsive Design */
     @media (max-width: 768px) {
         .hero-section {
-            padding: 3rem 0;
+            padding: 2rem 0;
             margin-bottom: 2rem;
         }
         
         .hero-title {
-            font-size: 2.5rem;
+            font-size: 2rem;
         }
         
         .hero-description {
@@ -254,11 +213,11 @@
         }
         
         .section-header h2 {
-            font-size: 2rem;
+            font-size: 1.5rem;
         }
         
         .product-image {
-            height: 200px;
+            height: 180px;
         }
         
         .cta-section {
@@ -276,16 +235,16 @@
         <div class="hero-content">
             <div class="row align-items-center">
                 <div class="col-lg-7">
-                    <h1 class="hero-title fade-in-up">{{ shop_profile.business_name }}</h1>
-                    <p class="hero-description fade-in-up">{{ shop_profile.business_description }}</p>
-                    <div class="fade-in-up">
-                        <a href="{% url 'shop_website:shop_products' shop_profile.user_profile.user.username %}" class="btn btn-modern btn-lg">
+                    <h1 class="hero-title">{{ shop_profile.business_name }}</h1>
+                    <p class="hero-description">{{ shop_profile.business_description }}</p>
+                    <div>
+                        <a href="{% url 'shop_website:shop_products' shop_profile.user_profile.user.username %}" class="btn btn-modern btn-sm">
                             <i class="fas fa-shopping-bag me-2"></i>Shop Now
                         </a>
                     </div>
                 </div>
                 {% if shop_profile.logo %}
-                <div class="col-lg-5 text-center fade-in-up">
+                <div class="col-lg-5 text-center">
                     <img src="{{ shop_profile.logo.url }}" alt="{{ shop_profile.business_name }}" class="img-fluid hero-image">
                 </div>
                 {% endif %}
@@ -397,7 +356,7 @@
             <div class="col-lg-8">
                 <h3 class="cta-title">Looking for something specific?</h3>
                 <p class="cta-description">Browse our complete collection of quality products</p>
-                <a href="{% url 'shop_website:shop_products' shop_profile.user_profile.user.username %}" class="btn btn-modern btn-lg">
+                <a href="{% url 'shop_website:shop_products' shop_profile.user_profile.user.username %}" class="btn btn-modern btn-sm">
                     <i class="fas fa-th me-2"></i>View All Products
                 </a>
             </div>
@@ -409,30 +368,15 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Add staggered animation to hero elements
-    const heroElements = document.querySelectorAll('.fade-in-up');
-    heroElements.forEach((el, index) => {
-        el.style.animationDelay = `${index * 0.2}s`;
-    });
-    
-    // Add parallax effect to hero section
-    window.addEventListener('scroll', () => {
-        const scrolled = window.pageYOffset;
-        const heroSection = document.querySelector('.hero-section');
-        if (heroSection) {
-            heroSection.style.transform = `translateY(${scrolled * 0.5}px)`;
-        }
-    });
-    
-    // Add hover effect to product cards
+    // Add subtle hover effects to product cards
     const productCards = document.querySelectorAll('.product-card');
     productCards.forEach(card => {
         card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-12px) scale(1.02)';
+            this.style.transform = 'translateY(-8px)';
         });
         
         card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0) scale(1)';
+            this.style.transform = 'translateY(0)';
         });
     });
 });

@@ -51,7 +51,7 @@ class UserProfile(models.Model):
         return self.is_site_admin
     
     def can_manage_products(self):
-        return self.is_shop_admin
+        return self.is_shop_admin or self.is_site_admin
     
     def can_manage_suppliers(self):
         return self.is_shop_admin
@@ -78,7 +78,7 @@ class UserProfile(models.Model):
         return self.is_cashier
     
     def can_delete_sales(self):
-        return self.is_shop_admin
+        return self.is_shop_admin or self.is_site_admin
     
     def can_view_site_dashboard(self):
         return self.is_site_admin

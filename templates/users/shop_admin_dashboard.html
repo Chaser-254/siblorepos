@@ -15,6 +15,9 @@
                 <i class="fas fa-external-link-alt mr-2"></i>View Website
             </a>
             {% endif %}
+            <a href="{% url 'shop_website:customer_order_lookup' %}" target="_blank" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+                <i class="fas fa-signature mr-2"></i>Customer Portal
+            </a>
             <a href="{% url 'users:registration_requests' %}" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
                 <i class="fas fa-user-check mr-2"></i>
                 {% if pending_requests > 0 %}
@@ -30,7 +33,7 @@
 </div>
 
 <!-- Shop Stats Cards -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
     <!-- Today's Sales -->
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
@@ -87,6 +90,20 @@
         </div>
     </div>
 
+    <!-- Invoice Stats -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 bg-amber-100 rounded-lg">
+                <i class="fas fa-file-invoice-dollar text-amber-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Total Invoices</p>
+                <p class="text-2xl font-bold text-gray-900">{{ invoice_stats.total_invoices|default:0 }}</p>
+                <p class="text-xs text-gray-500">All time</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Staff Count -->
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
@@ -103,7 +120,7 @@
 </div>
 
 <!-- Management Sections -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
     <!-- Website Management -->
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex justify-between items-center mb-4">
@@ -152,11 +169,129 @@
             <a href="{% url 'shop_website:manage_orders' %}" class="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors text-center block">
                 <i class="fas fa-list mr-2"></i>Manage Orders
             </a>
+            <a href="{% url 'shop_website:customer_order_lookup' %}" target="_blank" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors text-center block">
+                <i class="fas fa-signature mr-2"></i>Customer Portal
+            </a>
             {% else %}
             <a href="{% url 'shop_website:setup_website' %}" class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-center block">
                 <i class="fas fa-plus mr-2"></i>Setup Website
             </a>
             {% endif %}
+        </div>
+    </div>
+
+    <!-- Invoicing Management -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">Invoicing</h2>
+            <a href="{% url 'invoicing:dashboard' %}" class="text-blue-600 hover:text-blue-800 text-sm">
+                View All <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        <div class="space-y-3">
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <div class="flex items-center">
+                    <i class="fas fa-file-invoice text-gray-600 mr-3"></i>
+                    <span class="text-sm font-medium text-gray-700">Total Invoices</span>
+                </div>
+                <span class="text-lg font-bold text-amber-600">{{ invoice_stats.total_invoices|default:0 }}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <div class="flex items-center">
+                    <i class="fas fa-dollar-sign text-gray-600 mr-3"></i>
+                    <span class="text-sm font-medium text-gray-700">Invoice Revenue</span>
+                </div>
+                <span class="text-lg font-bold text-green-600">KES {{ invoice_stats.total_amount|default:0|floatformat:2 }}</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <div class="flex items-center">
+                    <i class="fas fa-clock text-gray-600 mr-3"></i>
+                    <span class="text-sm font-medium text-gray-700">Pending Amount</span>
+                </div>
+                <span class="text-lg font-bold text-orange-600">KES {{ invoice_stats.pending_amount|default:0|floatformat:2 }}</span>
+            </div>
+        </div>
+        <div class="mt-4 space-y-2">
+            <a href="{% url 'invoicing:invoice_create' %}" class="w-full bg-amber-600 text-white px-4 py-2 rounded-md hover:bg-amber-700 transition-colors text-center block">
+                <i class="fas fa-plus mr-2"></i>Create Invoice
+            </a>
+            <a href="{% url 'invoicing:invoice_list' %}" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-center block">
+                <i class="fas fa-list mr-2"></i>Manage Invoices
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Invoices -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">Recent Invoices</h2>
+            <a href="{% url 'invoicing:invoice_list' %}" class="text-blue-600 hover:text-blue-800 text-sm">
+                View All <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Invoice #
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Customer
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Amount
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for invoice in recent_invoices %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="{% url 'invoicing:invoice_detail' invoice.pk %}" class="text-blue-600 hover:text-blue-900 font-medium">
+                                {{ invoice.invoice_number }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-900">
+                            {{ invoice.customer.name }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-900">
+                            KES {{ invoice.total_amount|floatformat:2 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="invoice-status status-{{ invoice.status|lower }}">
+                                {{ invoice.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="{% url 'invoicing:invoice_detail' invoice.pk %}" class="text-blue-600 hover:text-blue-900 mr-3">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if invoice.status == 'DRAFT' %}
+                            <a href="{% url 'invoicing:invoice_update' invoice.pk %}" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'invoicing:invoice_delete' invoice.pk %}" class="text-red-600 hover:text-red-900">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                            No recent invoices
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -277,7 +412,7 @@
 <!-- Quick Actions -->
 <div class="bg-white rounded-lg shadow p-6">
     <h2 class="text-lg font-semibold text-gray-900 mb-4">Shop Management</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <a href="{% url 'sales:dashboard' %}" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
             <i class="fas fa-tachometer-alt text-blue-600 text-xl mr-3"></i>
             <div>
@@ -291,6 +426,14 @@
             <div>
                 <p class="font-medium text-gray-900">Stock Management</p>
                 <p class="text-sm text-gray-600">Manage inventory</p>
+            </div>
+        </a>
+        
+        <a href="{% url 'invoicing:dashboard' %}" class="flex items-center p-4 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors">
+            <i class="fas fa-file-invoice-dollar text-amber-600 text-xl mr-3"></i>
+            <div>
+                <p class="font-medium text-gray-900">Invoicing</p>
+                <p class="text-sm text-gray-600">Manage invoices</p>
             </div>
         </a>
         

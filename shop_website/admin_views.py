@@ -247,15 +247,51 @@ def delete_product(request, product_id):
         messages.error(request, 'Product not found.')
         return redirect('shop_website:manage_products')
     
+    # Check if product is referenced in any active carts or orders
+    from shop_website.models import CartItem, OrderItem
+    
+    cart_items = CartItem.objects.filter(product=product)
+    order_items = OrderItem.objects.filter(product=product)
+    
     if request.method == 'POST':
-        product_name = product.name
-        product.delete()
-        messages.success(request, f'Product "{product_name}" has been deleted from your website!')
-        return redirect('shop_website:manage_products')
+        try:
+            product_name = product.name
+            
+            # Delete related cart items first
+            cart_items.delete()
+            
+            # Check if product is in any completed orders (not cancelled)
+            active_orders = order_items.filter(order__order_status__in=['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'IN_TRANSIT', 'DELIVERED', 'SIGNED'])
+            
+            if active_orders.exists():
+                messages.error(request, f'Cannot delete "{product_name}" because it is referenced in active orders. Please cancel or complete those orders first.')
+                return render(request, 'shop_website/delete_product.html', {
+                    'shop_profile': shop_profile,
+                    'product': product,
+                    'has_active_orders': True,
+                    'active_orders_count': active_orders.count()
+                })
+            
+            # Delete order items from cancelled orders
+            order_items.delete()
+            
+            # Finally delete the product
+            product.delete()
+            messages.success(request, f'Product "{product_name}" has been deleted from your website!')
+            return redirect('shop_website:manage_products')
+            
+        except Exception as e:
+            messages.error(request, f'Error deleting product: {str(e)}')
+            return render(request, 'shop_website/delete_product.html', {
+                'shop_profile': shop_profile,
+                'product': product
+            })
     
     return render(request, 'shop_website/delete_product.html', {
         'shop_profile': shop_profile,
-        'product': product
+        'product': product,
+        'cart_items_count': cart_items.count(),
+        'order_items_count': order_items.count()
     })
 
 
@@ -315,10 +351,6 @@ def update_order_status(request, order_id):
     
     if request.method == 'POST':
         new_status = request.POST.get('order_status')
-        
-        # Debug: Print the received status and available choices
-        print(f"Received status: {new_status}")
-        print(f"Available choices: {dict(order.ORDER_STATUS_CHOICES).keys()}")
         
         if new_status in dict(order.ORDER_STATUS_CHOICES).keys():
             order.order_status = new_status

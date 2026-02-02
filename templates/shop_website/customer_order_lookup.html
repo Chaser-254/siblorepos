@@ -1,0 +1,401 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order Lookup - Customer Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Customer Portal Styling */
+.customer-portal {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.lookup-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.lookup-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    overflow: hidden;
+}
+
+.lookup-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2.5rem;
+    text-align: center;
+}
+
+.lookup-header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.lookup-header p {
+    margin: 1rem 0 0 0;
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+.lookup-body {
+    padding: 3rem;
+}
+
+.search-form {
+    margin-bottom: 3rem;
+}
+
+.search-input {
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.search-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    outline: none;
+}
+
+.search-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 15px;
+    padding: 1rem 2rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.search-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.search-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.results-container {
+    margin-top: 2rem;
+}
+
+.order-card {
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.order-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.1);
+    transform: translateY(-2px);
+}
+
+.order-number {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #667eea;
+    margin-bottom: 0.5rem;
+}
+
+.order-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.order-meta {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.order-status {
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.loading-spinner {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+}
+
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.error-message {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    margin: 1rem 0;
+    border-left: 4px solid #dc3545;
+}
+
+.success-message {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    margin: 1rem 0;
+    border-left: 4px solid #28a745;
+}
+
+.help-text {
+    background: linear-gradient(135deg, #e8f4fd 0%, #d1ecf1 100%);
+    color: #0c5460;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    border-left: 4px solid #17a2b8;
+}
+
+.help-text h5 {
+    color: #0c5460;
+    margin-bottom: 1rem;
+}
+
+.help-text ul {
+    margin-bottom: 0;
+}
+
+.help-text li {
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .lookup-header {
+        padding: 2rem 1.5rem;
+    }
+    
+    .lookup-header h1 {
+        font-size: 2rem;
+    }
+    
+    .lookup-body {
+        padding: 2rem 1.5rem;
+    }
+    
+    .order-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="customer-portal">
+    <div class="lookup-container">
+        <div class="lookup-card">
+            <div class="lookup-header">
+                <h1><i class="fas fa-search me-3"></i>Order Lookup</h1>
+                <p>Find and track your orders instantly</p>
+            </div>
+            
+            <div class="lookup-body">
+                <div class="help-text">
+                    <h5><i class="fas fa-info-circle me-2"></i>How to find your order</h5>
+                    <ul>
+                        <li><i class="fas fa-phone me-2"></i>Enter your phone number used for the order</li>
+                        <li><i class="fas fa-envelope me-2"></i>Or enter your email address</li>
+                        <li><i class="fas fa-hashtag me-2"></i>Or enter your order number (e.g., ORD-12345)</li>
+                        <li><i class="fas fa-mouse-pointer me-2"></i>Click on any order to view details and sign if delivered</li>
+                    </ul>
+                </div>
+
+                <form class="search-form" id="searchForm">
+                    <div class="mb-3">
+                        <label for="searchQuery" class="form-label fw-bold">
+                            <i class="fas fa-search me-2"></i>Search by Phone, Email, or Order Number
+                        </label>
+                        <input 
+                            type="text" 
+                            class="form-control search-input" 
+                            id="searchQuery" 
+                            placeholder="Enter phone number, email, or order number..."
+                            required
+                        >
+                        <div class="form-text">
+                            <i class="fas fa-lock me-1"></i>Your information is secure and only used to find your orders
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn search-btn" id="searchBtn">
+                        <i class="fas fa-search me-2"></i>Search Orders
+                    </button>
+                </form>
+
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <p>Searching for your orders...</p>
+                </div>
+
+                <div class="results-container" id="resultsContainer"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#searchForm').on('submit', function(e) {
+        e.preventDefault();
+        searchOrders();
+    });
+
+    // Allow search on Enter key
+    $('#searchQuery').on('keypress', function(e) {
+        if (e.which === 13) {
+            searchOrders();
+        }
+    });
+});
+
+function searchOrders() {
+    const query = $('#searchQuery').val().trim();
+    
+    if (!query) {
+        showMessage('Please enter a phone number, email, or order number', 'error');
+        return;
+    }
+
+    // Show loading
+    $('#loadingSpinner').show();
+    $('#resultsContainer').empty();
+    $('#searchBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Searching...');
+
+    // Perform search
+    $.ajax({
+        url: '{% url "shop_website:customer_order_search" %}',
+        method: 'GET',
+        data: { query: query },
+        success: function(response) {
+            $('#loadingSpinner').hide();
+            $('#searchBtn').prop('disabled', false).html('<i class="fas fa-search me-2"></i>Search Orders');
+
+            if (response.success) {
+                if (response.orders.length === 0) {
+                    showMessage('No orders found for the provided information', 'error');
+                } else {
+                    displayResults(response.orders);
+                    showMessage(`Found ${response.count} order(s)`, 'success');
+                }
+            } else {
+                showMessage(response.error || 'Search failed', 'error');
+            }
+        },
+        error: function() {
+            $('#loadingSpinner').hide();
+            $('#searchBtn').prop('disabled', false).html('<i class="fas fa-search me-2"></i>Search Orders');
+            showMessage('Search failed. Please try again.', 'error');
+        }
+    });
+}
+
+function displayResults(orders) {
+    const container = $('#resultsContainer');
+    container.empty();
+
+    orders.forEach(function(order) {
+        const statusColor = getStatusColor(order.order_status);
+        const orderCard = `
+            <div class="order-card" onclick="window.location.href='${order.detail_url}'">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="order-number">${order.order_number}</div>
+                        <div class="order-meta">
+                            <i class="fas fa-user me-1"></i>${order.customer_name}
+                            <span class="ms-3"><i class="fas fa-store me-1"></i>${order.shop_name}</span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold text-primary">KSh ${order.total_amount}</div>
+                        <div class="order-meta">${order.created_at}</div>
+                    </div>
+                </div>
+                <div class="order-info">
+                    <div>
+                        <span class="order-status" style="background: ${statusColor.bg}; color: ${statusColor.text};">
+                            ${order.status_display}
+                        </span>
+                    </div>
+                    <div>
+                        <i class="fas fa-arrow-right text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.append(orderCard);
+    });
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'PENDING': { bg: '#fff3cd', text: '#856404' },
+        'CONFIRMED': { bg: '#cce5ff', text: '#004085' },
+        'PROCESSING': { bg: '#fff3cd', text: '#856404' },
+        'IN_TRANSIT': { bg: '#e2e3e5', text: '#383d41' },
+        'DELIVERED': { bg: '#d4edda', text: '#155724' },
+        'SIGNED': { bg: '#d1ecf1', text: '#0c5460' },
+        'CANCELLED': { bg: '#f8d7da', text: '#721c24' }
+    };
+    return colors[status] || { bg: '#e2e3e5', text: '#383d41' };
+}
+
+function showMessage(message, type) {
+    const container = $('#resultsContainer');
+    const messageClass = type === 'error' ? 'error-message' : 'success-message';
+    const messageHtml = `
+        <div class="${messageClass}">
+            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+            ${message}
+        </div>
+    `;
+    container.prepend(messageHtml);
+    
+    // Auto-remove message after 5 seconds
+    setTimeout(function() {
+        container.find(`.${messageClass}`).fadeOut(500, function() {
+            $(this).remove();
+        });
+    }, 5000);
+}
+</script>
+{% endblock %}

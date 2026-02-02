@@ -43,6 +43,13 @@
                             View Website
                         </a>
                     {% endif %}
+                    <a href="{% url 'shop_website:customer_order_lookup' %}" target="_blank"
+                       class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Customer Portal
+                    </a>
                     <a href="{% url 'users:cashier_orders' %}" 
                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +68,7 @@
     <div class="max-w-7xl mx-auto px-4 py-8">
         {% if shop_profile %}
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                 <div class="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow animate-fade-in">
                     <div class="flex items-center justify-between">
                         <div>
@@ -118,6 +125,20 @@
                             <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 104 0m6 0a2 2 0 104 0m-4 0a2 2 0 104 0"></path>
                             </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoice Stats for Cashier -->
+                <div class="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow animate-fade-in">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600">Invoices</p>
+                            <p class="text-2xl font-bold text-amber-600">{{ invoice_stats.total_invoices|default:0 }}</p>
+                            <p class="text-xs text-gray-500 mt-1">Created by you</p>
+                        </div>
+                        <div class="h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-file-invoice-dollar text-amber-600 text-xl"></i>
                         </div>
                     </div>
                 </div>
@@ -195,12 +216,20 @@
                                             <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                                                 {{ order.get_order_status_display }}
                                             </span>
-                                        {% elif order.order_status == 'PREPARING' %}
+                                        {% elif order.order_status == 'PROCESSING' %}
                                             <span class="px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">
                                                 {{ order.get_order_status_display }}
                                             </span>
-                                        {% elif order.order_status == 'READY' %}
+                                        {% elif order.order_status == 'IN_TRANSIT' %}
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                                {{ order.get_order_status_display }}
+                                            </span>
+                                        {% elif order.order_status == 'DELIVERED' %}
                                             <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                {{ order.get_order_status_display }}
+                                            </span>
+                                        {% elif order.order_status == 'SIGNED' %}
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
                                                 {{ order.get_order_status_display }}
                                             </span>
                                         {% else %}
@@ -225,7 +254,7 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                                 </svg>
                                             </a>
-                                            {% if order.order_status != 'COMPLETED' and order.order_status != 'CANCELLED' %}
+                                            {% if order.order_status != 'DELIVERED' and order.order_status != 'CANCELLED' and order.order_status != 'SIGNED' %}
                                                 <button type="button" 
                                                         class="text-green-600 hover:text-green-900" 
                                                         title="Quick Update"
@@ -304,9 +333,9 @@ setInterval(() => location.reload(), 30000);
 function quickUpdateStatus(orderId, currentStatus) {
     const statusFlow = {
         'PENDING': 'CONFIRMED',
-        'CONFIRMED': 'PREPARING', 
-        'PREPARING': 'READY',
-        'READY': 'COMPLETED'
+        'CONFIRMED': 'PROCESSING', 
+        'PROCESSING': 'IN_TRANSIT',
+        'IN_TRANSIT': 'DELIVERED'
     };
     
     const newStatus = statusFlow[currentStatus];

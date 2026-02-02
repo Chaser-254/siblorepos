@@ -31,4 +31,10 @@ urlpatterns = [
     path('shop/admin/orders/', admin_views.manage_orders, name='manage_orders'),
     path('shop/admin/orders/<int:order_id>/status/', admin_views.update_order_status, name='update_order_status'),
     path('shop/admin/save-signature/', admin_views.save_signature, name='save_signature'),
+    
+    # Customer portal URLs
+    path('customer/lookup/', views.customer_order_lookup, name='customer_order_lookup'),
+    path('customer/order/<str:order_number>/', views.customer_order_detail, name='customer_order_detail'),
+    path('customer/save-signature/<str:order_number>/', views.customer_save_signature, name='customer_save_signature'),
+    path('customer/search/', views.customer_order_search, name='customer_order_search'),
 ]

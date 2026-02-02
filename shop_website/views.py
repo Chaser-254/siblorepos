@@ -3,11 +3,18 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse, Http404
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils import timezone
+from django.urls import reverse
 import uuid
 import json
+import base64
+import io
+from PIL import Image
+from django.core.files.base import ContentFile
+from django.db import models
 
 from .models import ShopProfile, ShopProduct, Cart, CartItem, Order, OrderItem
 from users.models import UserProfile
@@ -171,47 +178,59 @@ def add_to_cart(request, username, product_id):
     except (UserProfile.DoesNotExist, ShopProduct.DoesNotExist):
         return JsonResponse({'error': 'Product not found'}, status=404)
     
-    quantity = int(request.POST.get('quantity', 1))
-    
-    if quantity > product.stock_quantity:
-        return JsonResponse({'error': 'Not enough stock available'}, status=400)
-    
-    # Get or create cart
-    cart_id = request.session.get(f'cart_{shop_profile.id}')
-    
-    if not cart_id:
-        cart_id = str(uuid.uuid4())
-        request.session[f'cart_{shop_profile.id}'] = cart_id
-        cart = Cart.objects.create(
-            cart_id=cart_id,
-            shop_profile=shop_profile
+    try:
+        # Validate quantity
+        quantity = int(request.POST.get('quantity', 1))
+        if quantity < 1:
+            return JsonResponse({'error': 'Quantity must be at least 1'}, status=400)
+        
+        # Check stock availability
+        if not product.is_available or product.stock_quantity <= 0:
+            return JsonResponse({'error': 'Product is out of stock'}, status=400)
+        
+        if quantity > product.stock_quantity:
+            return JsonResponse({'error': f'Only {product.stock_quantity} items available in stock'}, status=400)
+        
+        # Get or create cart
+        cart_id = request.session.get(f'cart_{shop_profile.id}')
+        
+        if not cart_id:
+            cart_id = str(uuid.uuid4())
+            request.session[f'cart_{shop_profile.id}'] = cart_id
+            request.session.save()  # Ensure session is saved
+            cart = Cart.objects.create(
+                cart_id=cart_id,
+                shop_profile=shop_profile
+            )
+        else:
+            cart, created = Cart.objects.get_or_create(
+                cart_id=cart_id,
+                shop_profile=shop_profile
+            )
+        
+        # Add or update cart item
+        cart_item, created = CartItem.objects.get_or_create(
+            cart=cart,
+            product=product,
+            defaults={'quantity': quantity}
         )
-    else:
-        cart, created = Cart.objects.get_or_create(
-            cart_id=cart_id,
-            shop_profile=shop_profile
-        )
-    
-    # Add or update cart item
-    cart_item, created = CartItem.objects.get_or_create(
-        cart=cart,
-        product=product,
-        defaults={'quantity': quantity}
-    )
-    
-    if not created:
-        new_quantity = cart_item.quantity + quantity
-        if new_quantity > product.stock_quantity:
-            return JsonResponse({'error': 'Not enough stock available'}, status=400)
-        cart_item.quantity = new_quantity
-        cart_item.save()
-    
-    return JsonResponse({
-        'success': True,
-        'message': f'{product.name} added to cart',
-        'cart_items_count': cart.total_items,
-        'cart_total': str(cart.total_price)
-    })
+        
+        if not created:
+            new_quantity = cart_item.quantity + quantity
+            if new_quantity > product.stock_quantity:
+                return JsonResponse({'error': f'Only {product.stock_quantity} items available in stock'}, status=400)
+            cart_item.quantity = new_quantity
+            cart_item.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'{product.name} added to cart',
+            'cart_items_count': cart.total_items,
+            'cart_total': f"{cart.total_price:.2f}"
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': 'An unexpected error occurred'}, status=500)
 
 
 def cart_view(request, username):
@@ -237,7 +256,7 @@ def cart_view(request, username):
             'cart': None,
             'cart_items_count': 0,
         }
-        return render(request, 'shop_website/empty_cart.html', context)
+        return render(request, 'shop_website/cart.html', context)
     
     context = {
         'shop_profile': shop_profile,
@@ -419,3 +438,122 @@ def shop_admin_dashboard(request):
     }
     
     return render(request, 'shop_website/shop_admin_dashboard.html', context)
+
+# Customer Portal Views
+def customer_order_lookup(request):
+    """Customer order lookup page"""
+    return render(request, 'shop_website/customer_order_lookup.html')
+
+def customer_order_detail(request, order_number):
+    """Customer order detail page with signature functionality"""
+    try:
+        order = get_object_or_404(Order, order_number=order_number.upper())
+        
+        # Verify order belongs to a shop (security check)
+        if not order.shop_profile:
+            messages.error(request, 'Invalid order number.')
+            return redirect('shop_website:customer_order_lookup')
+        
+        context = {
+            'order': order,
+            'shop_profile': order.shop_profile,
+        }
+        
+        return render(request, 'shop_website/customer_order_detail.html', context)
+        
+    except Order.DoesNotExist:
+        messages.error(request, 'Order not found.')
+        return redirect('shop_website:customer_order_lookup')
+
+@csrf_exempt
+@require_POST
+def customer_save_signature(request, order_number):
+    """Save customer signature for their order"""
+    try:
+        order = get_object_or_404(Order, order_number=order_number.upper())
+        
+        # Verify order belongs to a shop
+        if not order.shop_profile:
+            return JsonResponse({'success': False, 'error': 'Invalid order'})
+        
+        signature_data = request.POST.get('signature')
+        
+        if not signature_data:
+            return JsonResponse({'success': False, 'error': 'Missing signature data'})
+        
+        # Check if order is in correct status for signing
+        if order.order_status not in ['DELIVERED', 'SIGNED']:
+            return JsonResponse({'success': False, 'error': 'Order must be delivered before signing'})
+        
+        # Check if signature already exists
+        if order.customer_signature:
+            return JsonResponse({'success': False, 'error': 'Signature already exists'})
+        
+        # Process base64 signature data
+        format, imgstr = signature_data.split(';base64,')
+        ext = format.split('/')[-1]
+        
+        # Convert base64 to image
+        img_data = base64.b64decode(imgstr)
+        image = Image.open(io.BytesIO(img_data))
+        
+        # Save to file
+        image_io = io.BytesIO()
+        image.save(image_io, format='PNG')
+        image_io.seek(0)
+        
+        # Create filename
+        filename = f'signature_order_{order.order_number}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.png'
+        
+        # Save signature
+        order.customer_signature.save(filename, ContentFile(image_io.read()), save=True)
+        order.signed_at = timezone.now()
+        order.order_status = 'SIGNED'
+        order.save()
+        
+        return JsonResponse({'success': True, 'message': 'Signature saved successfully!'})
+        
+    except (ValueError, IndexError) as e:
+        return JsonResponse({'success': False, 'error': 'Invalid signature data format'})
+    except (IOError, OSError) as e:
+        return JsonResponse({'success': False, 'error': 'Failed to process signature image'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'An error occurred: {str(e)}'})
+
+def customer_order_search(request):
+    """Search for orders by phone number or email"""
+    phone_or_email = request.GET.get('query', '').strip()
+    
+    if not phone_or_email:
+        return JsonResponse({'success': False, 'error': 'Please enter a phone number or email'})
+    
+    try:
+        # Search by phone or email
+        orders = Order.objects.filter(
+            models.Q(customer_phone__icontains=phone_or_email) |
+            models.Q(customer_email__icontains=phone_or_email)
+        ).select_related('shop_profile').order_by('-created_at')
+        
+        orders_data = []
+        for order in orders:
+            orders_data.append({
+                'order_number': order.order_number,
+                'customer_name': order.customer_name,
+                'customer_phone': order.customer_phone,
+                'customer_email': order.customer_email,
+                'total_amount': str(order.total_amount),
+                'order_status': order.order_status,
+                'status_display': order.get_order_status_display(),
+                'created_at': order.created_at.strftime('%Y-%m-%d %H:%M'),
+                'shop_name': order.shop_profile.business_name if order.shop_profile else 'Unknown',
+                'detail_url': reverse('shop_website:customer_order_detail', args=[order.order_number])
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'orders': orders_data,
+            'count': len(orders_data)
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Search failed: {str(e)}'})
