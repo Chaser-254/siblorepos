@@ -256,9 +256,9 @@
                                             </a>
                                             {% if order.order_status != 'DELIVERED' and order.order_status != 'CANCELLED' and order.order_status != 'SIGNED' %}
                                                 <button type="button" 
-                                                        class="text-green-600 hover:text-green-900" 
-                                                        title="Quick Update"
-                                                        onclick="quickUpdateStatus({{ order.pk }}, '{{ order.order_status }}')">
+                                                        data-order-id="{{ order.pk }}" data-current-status="{{ order.order_status }}"
+                                                        class="quick-update-btn text-green-600 hover:text-green-900" 
+                                                        title="Quick Update">
                                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 1.414L10.586 9.414 7.293 6.121a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414z" clip-rule="evenodd"></path>
                                                     </svg>
@@ -326,11 +326,12 @@
 
 {% block extra_js %}
 <script>
-// Auto-refresh every 30 seconds
-setInterval(() => location.reload(), 30000);
+$(document).ready(function() {
+    // Auto-refresh every 30 seconds
+    let refreshInterval = setInterval(() => location.reload(), 30000);
 
-// Quick status update function
-function quickUpdateStatus(orderId, currentStatus) {
+    // Quick status update function
+    function quickUpdateStatus(orderId, currentStatus) {
     const statusFlow = {
         'PENDING': 'CONFIRMED',
         'CONFIRMED': 'PROCESSING', 
@@ -445,13 +446,20 @@ document.addEventListener('keydown', function(e) {
     window.showLoadingOverlay = showLoadingOverlay;
     window.hideLoadingOverlay = hideLoadingOverlay;
     window.showNotification = showNotification;
-});
-
-// Clean up interval on page unload
-$(window).on('beforeunload', function() {
-    if (refreshInterval) {
-        clearInterval(refreshInterval);
-    }
+    
+    // Event delegation for quick update buttons
+    $(document).on('click', '.quick-update-btn', function() {
+        const orderId = $(this).data('order-id');
+        const currentStatus = $(this).data('current-status');
+        quickUpdateStatus(orderId, currentStatus);
+    });
+    
+    // Clean up interval on page unload
+    $(window).on('beforeunload', function() {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+        }
+    });
 });
 </script>
 {% endblock %}
