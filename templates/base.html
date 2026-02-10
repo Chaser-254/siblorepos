@@ -14,45 +14,42 @@
         .mobile-menu-btn { display: none; }
         .desktop-sidebar { display: block; }
         
-        @media (max-width: 1024px) {
-            .mobile-menu-btn { display: block; }
-            .desktop-sidebar { display: none; }
-            .mobile-sidebar { 
-                position: fixed; 
-                top: 0; 
-                left: -100%; 
-                width: 280px; 
-                height: 100vh; 
-                background: white; 
-                z-index: 50; 
-                transition: left 0.3s ease; 
-                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-                overflow-y: auto;
-            }
-            .mobile-sidebar.active { left: 0; }
-            .sidebar-overlay { 
-                position: fixed; 
-                top: 0; 
-                left: 0; 
-                width: 100%; 
-                height: 100vh; 
-                background: rgba(0,0,0,0.5); 
-                z-index: 40; 
-                display: none; 
-            }
-            .sidebar-overlay.active { display: block; }
-            body.sidebar-open { overflow: hidden; }
-            
-            /* Improve mobile table scrolling */
-            .overflow-x-auto {
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            /* Better mobile touch targets */
-            .btn-mobile {
-                min-height: 44px;
-                min-width: 44px;
-            }
+        /* Mobile sidebar styles */
+        .mobile-sidebar { 
+            position: fixed; 
+            top: 0; 
+            left: -100%; 
+            width: 280px; 
+            height: 100vh; 
+            background: white; 
+            z-index: 50; 
+            transition: left 0.3s ease; 
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+        .mobile-sidebar.active { left: 0; }
+        .sidebar-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100vh; 
+            background: rgba(0,0,0,0.5); 
+            z-index: 40; 
+            display: none; 
+        }
+        .sidebar-overlay.active { display: block; }
+        body.sidebar-open { overflow: hidden; }
+        
+        /* Improve mobile table scrolling */
+        .overflow-x-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Better mobile touch targets */
+        .btn-mobile {
+            min-height: 44px;
+            min-width: 44px;
         }
     </style>
 </head>
@@ -112,7 +109,7 @@
                             <i class="fas fa-shield-alt mr-1"></i>Superuser
                         </span>
                         {% endif %}
-                        <a href="{% url 'users:logout' %}" class="text-sm text-red-600 hover:text-red-800 flex items-center">
+                        <a href="{% url 'users:logout' %}" class="text-sm text-red-600 hover:text-red-800 flex items-center lg:hidden">
                             <i class="fas fa-sign-out-alt mr-1"></i>
                             <span class="hidden sm:inline">Logout</span>
                         </a>
@@ -599,6 +596,20 @@
                         </a>
                     </li>
                 </ul>
+                
+                <!-- User Actions -->
+                {% if user.is_authenticated %}
+                <div class="border-t border-gray-200 mt-6 pt-6">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">User Actions</h3>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="{% url 'users:logout' %}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium rounded-md text-red-600 hover:text-red-800 hover:bg-red-50">
+                                <i class="fas fa-sign-out-alt mr-3 text-red-500"></i>
+                                Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
                 {% endif %}
                 {% endif %}
             </div>
