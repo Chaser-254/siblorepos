@@ -14,7 +14,7 @@
         .mobile-menu-btn { display: none; }
         .desktop-sidebar { display: block; }
         
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .mobile-menu-btn { display: block; }
             .desktop-sidebar { display: none; }
             .mobile-sidebar { 
@@ -64,7 +64,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <!-- Mobile menu button -->
-                    <button id="mobileMenuBtn" class="mobile-menu-btn md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 mr-2">
+                    <button id="mobileMenuBtn" class="mobile-menu-btn lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 mr-2">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
                     <div class="flex-shrink-0 flex items-center">
@@ -72,7 +72,7 @@
                         <h1 class="font-bold text-lg sm:text-xl text-gray-800">SibLore POS</h1>
                     </div>
                 </div>
-                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                    <div class="hidden lg:ml-6 lg:flex lg:space-x-8">
                         <a href="{% url 'sales:dashboard' %}" class="border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Dashboard
                         </a>
@@ -96,9 +96,8 @@
                         {% endif %}
                     </div>
                 </div>
-                <div class="flex items-center space-x-2 sm:space-x-4">
+                <div class="hidden lg:flex items-center space-x-2 lg:space-x-4">
                     {% if user.is_authenticated %}
-                        <div class="hidden sm:flex items-center space-x-2 sm:space-x-4">
                             <span class="text-sm text-gray-600">
                                 <i class="fas fa-user-circle mr-1"></i>
                                 {{ user.username }}
@@ -134,10 +133,10 @@
 
     <div class="flex">
         <!-- Mobile Sidebar Overlay -->
-        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+        <div id="sidebarOverlay" class="sidebar-overlay lg:hidden"></div>
         
         <!-- Mobile Sidebar -->
-        <aside id="mobileSidebar" class="mobile-sidebar">
+        <aside id="mobileSidebar" class="mobile-sidebar lg:hidden">
             <div class="p-4">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-semibold text-gray-800">Menu</h2>
@@ -374,7 +373,7 @@
         </aside>
         
         <!-- Desktop Sidebar -->
-        <aside class="desktop-sidebar w-64 bg-white shadow-md min-h-screen">
+        <aside class="desktop-sidebar hidden lg:block w-64 bg-white shadow-md min-h-screen">
             <div class="p-4">
                 <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main Menu</h3>
                 <ul class="space-y-2">

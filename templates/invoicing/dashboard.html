@@ -152,13 +152,8 @@
                                 <i class="fas fa-eye"></i> View
                             </a>
                             
-                            <!-- Debug info (remove in production) -->
-                            <small class="text-gray-500 block mb-1">
-                                User: {{ user.username }} | Can Delete: {{ user.profile.can_delete_sales }} | Is Site Admin: {{ user.profile.is_site_admin }} | Invoice Status: {{ invoice.status }}
-                            </small>
-                            
                             {% if user.profile.can_delete_sales %}
-                                {% if invoice.status == 'DRAFT' or user.profile.is_site_admin or invoice.status in ['SENT', 'PARTIALLY_PAID', 'OVERDUE', 'CANCELLED'] %}
+                                {% if invoice.status == 'DRAFT' or user.profile.is_site_admin or invoice.status in 'SENT PARTIALLY_PAID OVERDUE CANCELLED' %}
                                 <a href="{% url 'invoicing:invoice_delete' invoice.pk %}" class="text-red-600 hover:text-red-900 mr-3" 
                                    title="Delete Invoice">
                                     <i class="fas fa-trash"></i> Delete

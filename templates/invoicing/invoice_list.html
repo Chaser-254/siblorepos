@@ -197,7 +197,7 @@
                             </a>
                             {% endif %}
                             {% if user.profile.can_delete_sales %}
-                                {% if invoice.status == 'DRAFT' or user.profile.is_site_admin or invoice.status in ['SENT', 'PARTIALLY_PAID', 'OVERDUE', 'CANCELLED'] %}
+                                {% if invoice.status == 'DRAFT' or user.profile.is_site_admin or invoice.status in 'SENT PARTIALLY_PAID OVERDUE CANCELLED' %}
                                 <a href="{% url 'invoicing:invoice_delete' invoice.pk %}" class="text-red-600 hover:text-red-900 mr-3">
                                     Delete
                                 </a>
