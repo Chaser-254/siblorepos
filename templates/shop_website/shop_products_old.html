@@ -15,7 +15,7 @@
         <div class="col-md-6">
             <form method="get" class="d-flex">
                 <input type="text" name="search" class="form-control me-2" placeholder="Search products..." value="{{ search_query }}">
-                <button type="submit" class="btn btn-outline-primary">
+                <button type="submit" class="btn btn-outline">
                     <i class="fas fa-search"></i>
                 </button>
             </form>
@@ -47,7 +47,7 @@
         {% if selected_category %}
         <span class="badge bg-secondary me-2">Category: {{ selected_category }}</span>
         {% endif %}
-        <a href="{% url 'shop_website:shop_products' shop_profile.user_profile.user.username %}" class="btn btn-sm btn-outline-secondary">Clear All</a>
+        <a href="{% url 'shop_website:shop_products' shop_profile.user_profile.user.username %}" class="btn btn-sm btn-secondary">Clear All</a>
     </div>
     {% endif %}
 
@@ -88,7 +88,7 @@
                         
                         <div class="d-grid gap-2">
                             <a href="{% url 'shop_website:product_detail' shop_profile.user_profile.user.username product.id %}" 
-                               class="btn btn-outline-primary btn-sm">
+                               class="btn btn-outline btn-sm">
                                 <i class="fas fa-eye me-1"></i>View Details
                             </a>
                             {% if product.is_in_stock %}

@@ -4,9 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SibLore POS - Professional Point of Sale System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Google Fonts - Modern & Versatile Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Montserrat for headings - modern & versatile -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Work Sans for body text - clean & professional -->
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Cinzel for welcome text - elegant serif -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
+    
     <style>
+        /* Font Family Definitions */
+        body {
+            font-family: 'Work Sans', sans-serif;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
         .hero-gradient {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
@@ -170,17 +193,17 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center">
-                        <i class="fas fa-cash-register text-blue-600 text-xl sm:text-2xl mr-2 sm:mr-3"></i>
+                        <i class="bi bi-cash-stack text-primary text-xl sm:text-2xl me-2 me-sm-3"></i>
                         <h1 class="font-bold text-lg sm:text-xl text-gray-800">SibLore POS</h1>
                     </div>
                 </div>
                 <div class="flex items-center space-x-2 sm:space-x-4">
                     <a href="{% url 'users:login' %}" class="text-blue-600 hover:text-blue-800 font-medium text-sm sm:text-base">
-                        <i class="fas fa-sign-in-alt mr-1"></i>
+                        <i class="bi bi-box-arrow-in-right me-1"></i>
                         <span class="hidden sm:inline">Login</span>
                     </a>
                     <a href="{% url 'users:register_request' %}" class="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm sm:text-base">
-                        <i class="fas fa-user-plus mr-1"></i>
+                        <i class="bi bi-person-plus me-1"></i>
                         <span class="hidden sm:inline">Request Account</span>
                         <span class="sm:hidden">Request</span>
                     </a>
@@ -193,23 +216,23 @@
     <div class="hero-gradient text-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
             <div class="text-center">
-                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6">
+                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 font-cinzel">
                     Professional Point of Sale System
                 </h1>
                 <p class="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 text-blue-100 px-4 sm:px-0">
                     Streamline your business with our comprehensive POS solution
                 </p>
-                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
-                    <a href="{% url 'users:login' %}" class="sm:w-auto bg-white text-blue-600 px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-center max-w-xs mx-auto sm:mx-0">
-                        <i class="fas fa-sign-in-alt mr-2"></i>
+                <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center px-4 sm:px-0">
+                    <a href="{% url 'users:login' %}" class="sm:w-auto bg-white text-blue-600 px-4 sm:px-6 py-2 rounded-md font-medium hover:bg-gray-100 transition-colors text-center max-w-xs mx-auto sm:mx-0">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>
                         Login to System
                     </a>
-                    <a href="{% url 'users:register_request' %}" class="sm:w-auto bg-blue-800 text-white px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-blue-900 transition-colors text-center max-w-xs mx-auto sm:mx-0">
-                        <i class="fas fa-user-plus mr-2"></i>
+                    <a href="{% url 'users:register_request' %}" class="sm:w-auto bg-blue-800 text-white px-4 sm:px-6 py-2 rounded-md font-medium hover:bg-blue-900 transition-colors text-center max-w-xs mx-auto sm:mx-0">
+                        <i class="bi bi-person-plus me-2"></i>
                         Request Access
                     </a>
-                    <button onclick="openBookingModal()" class="sm:w-auto bg-green-600 text-white px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors text-center max-w-xs mx-auto sm:mx-0">
-                        <i class="fas fa-calendar-check mr-2"></i>
+                    <button onclick="openBookingModal()" class="sm:w-auto bg-green-600 text-white px-4 sm:px-6 py-2 rounded-md font-medium hover:bg-green-700 transition-colors text-center max-w-xs mx-auto sm:mx-0">
+                        <i class="bi bi-calendar-check me-2"></i>
                         Book a Demo
                     </button>
                 </div>
@@ -233,7 +256,7 @@
                 <!-- Sales Management -->
                 <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
                     <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
-                        <i class="fas fa-shopping-cart text-blue-600 text-xl"></i>
+                        <i class="bi bi-cart text-primary text-xl"></i>
                     </div>
                     <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Sales Management</h3>
                     <p class="text-gray-600 mb-4 text-sm sm:text-base">
@@ -249,7 +272,7 @@
                 <!-- Inventory Management -->
                 <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
                     <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
-                        <i class="fas fa-warehouse text-green-600 text-xl"></i>
+                        <i class="bi bi-house-door text-success text-xl"></i>
                     </div>
                     <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Inventory Management</h3>
                     <p class="text-gray-600 mb-4 text-sm sm:text-base">
@@ -265,7 +288,7 @@
                 <!-- Customer Management -->
                 <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
                     <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
-                        <i class="fas fa-users text-purple-600 text-xl"></i>
+                        <i class="bi bi-people text-primary text-xl"></i>
                     </div>
                     <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Customer Management</h3>
                     <p class="text-gray-600 mb-4 text-sm sm:text-base">
@@ -281,7 +304,7 @@
                 <!-- Reporting -->
                 <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
                     <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-6">
-                        <i class="fas fa-chart-bar text-yellow-600 text-xl"></i>
+                        <i class="bi bi-bar-chart text-warning text-xl"></i>
                     </div>
                     <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Advanced Reporting</h3>
                     <p class="text-gray-600 mb-4 text-sm sm:text-base">
@@ -297,7 +320,7 @@
                 <!-- Debt Management -->
                 <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
                     <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-6">
-                        <i class="fas fa-hand-holding-usd text-red-600 text-xl"></i>
+                        <i class="bi bi-cash text-danger text-xl"></i>
                     </div>
                     <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Debt Management</h3>
                     <p class="text-gray-600 mb-4 text-sm sm:text-base">
@@ -313,7 +336,7 @@
                 <!-- User Management -->
                 <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
                     <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
-                        <i class="fas fa-users-cog text-indigo-600 text-xl"></i>
+                        <i class="bi bi-gear text-primary text-xl"></i>
                     </div>
                     <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">User Management</h3>
                     <p class="text-gray-600 mb-4 text-sm sm:text-base">
@@ -329,7 +352,7 @@
                 <!-- Multi-Shop Support -->
                 <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
                     <div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-6">
-                        <i class="fas fa-store text-teal-600 text-xl"></i>
+                        <i class="bi bi-shop text-info text-xl"></i>
                     </div>
                     <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Multi-Shop Support</h3>
                     <p class="text-gray-600 mb-4 text-sm sm:text-base">
@@ -345,7 +368,7 @@
                 <!-- Supplier Management -->
                 <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
                     <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-6">
-                        <i class="fas fa-truck text-orange-600 text-xl"></i>
+                        <i class="bi bi-truck text-warning text-xl"></i>
                     </div>
                     <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Supplier Management</h3>
                     <p class="text-gray-600 mb-4 text-sm sm:text-base">
@@ -361,7 +384,7 @@
                 <!-- Mobile App -->
                 <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
                     <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mb-6">
-                        <i class="fas fa-mobile-alt text-pink-600 text-xl"></i>
+                        <i class="bi bi-phone text-primary text-xl"></i>
                     </div>
                     <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Mobile Access</h3>
                     <p class="text-gray-600 mb-4 text-sm sm:text-base">
@@ -377,7 +400,7 @@
                 <!-- Professional Invoicing -->
                 <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
                     <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
-                        <i class="fas fa-file-invoice-dollar text-indigo-600 text-xl"></i>
+                        <i class="bi bi-receipt text-primary text-xl"></i>
                     </div>
                     <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Professional Invoicing</h3>
                     <p class="text-gray-600 mb-4 text-sm sm:text-base">
@@ -393,7 +416,7 @@
                 <!-- Tax Management -->
                 <div class="feature-card bg-white rounded-lg shadow-lg p-6 sm:p-8">
                     <div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center mb-6">
-                        <i class="fas fa-calculator text-cyan-600 text-xl"></i>
+                        <i class="bi bi-calculator text-info text-xl"></i>
                     </div>
                     <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Tax & Compliance</h3>
                     <p class="text-gray-600 mb-4 text-sm sm:text-base">
@@ -416,17 +439,17 @@
             <p class="text-lg sm:text-xl mb-6 sm:mb-8 text-gray-300 px-4 sm:px-0">
                 Join thousands of businesses using SibLore POS to streamline their operations
             </p>
-            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
-                <a href="{% url 'users:login' %}" class="w-full sm:w-auto bg-white text-gray-800 px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-center">
-                    <i class="fas fa-sign-in-alt mr-2"></i>
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center px-4 sm:px-0">
+                <a href="{% url 'users:login' %}" class="w-full sm:w-auto bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors text-center" style="background-color: var(--royal-blue);">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>
                     Login Now
                 </a>
-                <a href="{% url 'users:register_request' %}" class="w-full sm:w-auto bg-blue-600 text-white px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center">
-                    <i class="fas fa-user-plus mr-2"></i>
+                <a href="{% url 'users:register_request' %}" class="w-full sm:w-auto bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors text-center">
+                    <i class="bi bi-person-plus me-2"></i>
                     Request Access
                 </a>
-                <button onclick="openBookingModal()" class="w-full sm:w-auto bg-green-600 text-white px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors text-center">
-                    <i class="fas fa-calendar-check mr-2"></i>
+                <button onclick="openBookingModal()" class="w-full sm:w-auto text-white px-4 sm:px-6 py-2 rounded-md font-medium hover:opacity-90 transition-colors text-center" style="background-color: var(--accent-green);">
+                    <i class="bi bi-calendar-check me-2"></i>
                     Book a Demo
                 </button>
             </div>

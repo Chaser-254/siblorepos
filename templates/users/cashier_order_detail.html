@@ -502,10 +502,10 @@
                 <p class="mb-0"><i class="fas fa-receipt me-2"></i>Order #{{ order.order_number }}</p>
             </div>
             <div>
-                <a href="{% url 'users:cashier_orders' %}" class="btn btn-light">
+                <a href="{% url 'users:cashier_orders' %}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Back to Orders
                 </a>
-                <button type="button" class="btn btn-light ms-2" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
                     <i class="fas fa-edit me-2"></i>Update Status
                 </button>
             </div>
@@ -665,16 +665,16 @@
                                 <i class="fas fa-edit"></i> Update Status
                             </button>
                             
-                            <a href="tel:{{ order.customer_phone }}" class="btn btn-outline-primary">
+                            <a href="tel:{{ order.customer_phone }}" class="btn btn-outline">
                                 <i class="fas fa-phone"></i> Call Customer
                             </a>
                             
-                            <a href="mailto:{{ order.customer_email }}" class="btn btn-outline-secondary">
+                            <a href="mailto:{{ order.customer_email }}" class="btn btn-secondary">
                                 <i class="fas fa-envelope"></i> Email Customer
                             </a>
                             
                             {% if order.delivery_address %}
-                            <button type="button" class="btn btn-outline-info" onclick="window.open('https://maps.google.com/?q={{ order.delivery_address }}', '_blank')">
+                            <button type="button" class="btn btn-info" onclick="window.open('https://maps.google.com/?q={{ order.delivery_address }}', '_blank')">
                                 <i class="fas fa-map"></i> View on Map
                             </button>
                             {% endif %}
@@ -716,7 +716,7 @@
                             <p class="text-muted mb-3">Please ask the customer to sign below to confirm order pickup:</p>
                             <canvas id="signature-canvas" width="600" height="200" class="border border-2 border-secondary rounded" style="touch-action: none; cursor: crosshair; background: white;"></canvas>
                             <div class="mt-3">
-                                <button type="button" class="btn btn-outline-danger me-2" onclick="clearSignature()">
+                                <button type="button" class="btn btn-danger me-2" onclick="clearSignature()">
                                     <i class="fas fa-eraser"></i> Clear
                                 </button>
                                 <button type="button" class="btn btn-primary" onclick="saveSignature()">
@@ -835,7 +835,7 @@ function saveSignature() {
     // Create form data
     const formData = new FormData();
     formData.append('signature', dataURL);
-    formData.append('order_id', {{ order.pk }});
+    formData.append('order_id', '{{ order.pk }}');
     
     // Get CSRF token
     const csrfToken = $('[name=csrfmiddlewaretoken]').val();
